@@ -1,0 +1,9 @@
+Syntax Parser Language
+
+outputObjectProperty=<tokenType>"Value"
+
+{many}
+(either)
+[optional]
+item;item;item
+%otherDefinedSyntax%
