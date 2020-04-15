@@ -1,6 +1,6 @@
 PROG COUNTER
-  = B1 IN["BEGIN : "]:
-  = E1 IN["END   : "]:
+  = B1 IN["BEGIN"]:
+  = E1 IN["END"]:
   = C1 B1:
   WHEN !== C1 E1
     DO
