@@ -39,9 +39,6 @@ export async function zedCompiler(o: {
   src: string;
   dst: string;
 }): Promise<void> {
-  if (!o.src.endsWith(".z")) {
-    throw ":: Not a Z source file."
-  }
   const sourceFile = await Deno.open(o.src);
   const lexer = new Lexer(TOKEN_RULES);
   const tokens = await lexer.lex(sourceFile);
@@ -50,19 +47,15 @@ export async function zedCompiler(o: {
   const parser = new ZedParser();
   const parseResult = parser.parse(tokens);
   //console.log(parseResult.program);
-  if (parseResult.errors.length) {
-    console.log("Compiler Errors:");
-    for (let e of parseResult.errors) {
-      console.log(" -", e.name.padEnd(20, " "), e.message);
-    }
-  } else {
-    //console.log("--------");
-    const compiler = new PythonCompiler();
-    const pythonObjectFile = compiler.compile(parseResult.program);
-    //console.log(pythonObjectFile);
-    await Deno.writeFile(o.dst, encode(pythonObjectFile));
-    console.log("Successfuly Compiled");
+  if (parseResult.errors.length) console.log("Compiler Errors:");
+  for (let e of parseResult.errors) {
+    console.log(" -", e.name.padEnd(20, " "), e.message);
   }
+  //console.log("--------");
+  const compiler = new PythonCompiler();
+  const pythonObjectFile = compiler.compile(parseResult.program);
+  //console.log(pythonObjectFile);
+  await Deno.writeFile(o.dst, encode(pythonObjectFile));
 }
 
 interface Token {
@@ -257,7 +250,7 @@ class ZedParser {
 
   private assertEndOfInstruction(t: Token[], doThrow = true): void {
     if (!this.testToken(t[0], "special", ":")) {
-      if (doThrow) throw new TokenError(t[0], "An INSTRUCTION must be terminated with ':'. Check the previous line");
+      if (doThrow) throw new TokenError(t[0], "An INSTRUCTION must be terminated with ':'. Check the previous line.");
     }
     else t.shift();
   }
@@ -548,30 +541,18 @@ class ZedParser {
   }
 }
 
+let a: Syntax.Structure;
+
 class PythonCompiler {
   private indentLevel = 0;
+
   compile(p: Syntax.Program): string {
     this.indentLevel = 0;
     let output = "";
-    output +=
-`def zedInput(prompt):
- _in=input(prompt)
- try:
-  return int(_in)
- except:
-  try:
-   return float(_in)
-  except:
-   return _in
-
-def zedAssign(var,val):
- if type(var) == int:
-  return int(val)
- elif type(var) == float:
-  return float(val)
- elif type(var) == str:
-  return str(val)
- raise "OOPS"\n\n`;
+    output += `def zedInput(prompt):\n`;
+    output += ` _in=input(prompt)\n`;
+    output += ` try: return int(_in)\n`;
+    output += ` except: return _in\n\n`;
     output += `def ${p.name}():\n`;
     this.indentLevel++;
     output += this.compileCodeLines(p.code);
@@ -583,7 +564,6 @@ def zedAssign(var,val):
     return "".padStart(this.indentLevel, " ")+s;
   }
   private compileCodeLines(code: Syntax.Instruction[]): string {
-    if (code.length === 0) return this.indent("pass");
     let output = "";
     for (let c of code) {
       output += this.compileStructure(c);
@@ -674,17 +654,13 @@ def zedAssign(var,val):
     if ((s.value as Syntax.Variable).identifier !== undefined) value = (s.value as Syntax.Variable).identifier;
     else if ((s.value as Syntax.Input).prompt !== undefined) value = this.compileInput(s.value as Syntax.Input);
     else value = String(s.value);
-    if (s.operator !== undefined) {
-      return this.indent(`${s.variable.identifier}${s.operator?s.operator:""}=zedAssign(${s.variable.identifier},${value})\n`);
-    } else {
-      return this.indent(`${s.variable.identifier}${s.operator?s.operator:""}=${value}\n`);
-    }
+    return this.indent(`${s.variable.identifier}${s.operator?s.operator:""}=${value}\n`);
   }
   private compileOutput(s: Syntax.Output): string {
     let output = this.indent("print(");
     for (let val of s.values) {
       if ((val as Syntax.Variable).identifier !== undefined) output += (val as Syntax.Variable).identifier+",";
-      else output += `${val},`;
+      else output += `str(${val}),`;
     }
     return output+")\n";
   }
