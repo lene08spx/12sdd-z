@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Z Programming Language - Development Log</title>
+</head>
+<body>
+	<h1>The Z Programming Language<br>Development Log 2020</h1>
+	<article>
+		<h1>T1W10</h1>
+		<p>
+			In-line with the <em>Project Plan</em>, the development
+			evironment was installed. This included installing the
+			Deno runtime, and setting up the environment for working
+			with the Visual Studio Code IDE. The primary image required,
+			the 'Z' logo, was designed.
+		</p>
+	</article>
+	<article>
+		<h1>T1W11</h1>
+		<h2>11/12th April</h2>
+		<p>
+			To meet the T1W11 plan, the lexer, syntax-checker, and debugging
+			messages were developed. These were developed as separate modules
+			which in hind-sight probably slowed the implementation of the 
+			algorithms, due to module-importing complexities.<br>
+			By the end of the two days, the compiler could:
+			<ul>
+				<li>read a source file,</li>
+				<li>generate an ordered list of language tokens,</li>
+				<li>and generate a syntax tree based only on the
+					<code>PROG ENDPROG</code> and 'assignment' structures.</li>
+			</ul>
+			The Lexing was achieved using regular expressions, which tested
+			each word input and returned a category (keyword, number, etc.).
+		</p>
+	</article>
+	<article>
+		<h1>Hol.W1</h1>
+		<h2>13th April</h2>
+		<p>
+			Today was spent attempting to create a special Syntax-Checker
+			that could accept a list of rules and test given data. This
+			was an interesting endeavour, however it proved fruitless due
+			to difficulties managing recursion. It may be picked up during
+			the later stages of development to make the code more flexible
+			and easier to understand.<br>
+			Part of the setback was due to complexities of JavaScript's
+			function parameters. It is easy to forget that an Array
+			being passed in is passed as a reference; this means that a 
+			change to it in an external function (such as one called to
+			recurse) will change its contents back outside, causing headaches
+			when trying to figure out where something went wrong. This is
+			solved by print the value of the Object when it is passed in, 
+			and when that called function returns.
+		</p>
+		<h2>14th April</h2>
+		<p>
+			Today focused on implementing more syntax checks. This included
+			parsing Input Statements, Conditions (which required recursion),
+			Do Blocks, Pre-Tests and Output Statements. It also threw certain
+			errors depending on where an invalid token was encountered. Each
+			parser for a structure type was called, "popping" each token
+			off of the Token-Array. If it threw a ParserError, the mistake
+			was "mine" for calling it and so the Syntax-Checker attempted
+			to parse the tokens with another parser. If a SyntaxError was
+			discovered, the token was discarded and this meant that the user
+			input was invalid, i.e. a malformed statement was provided.<br>
+			At the end of the day, the program could reliably provide a
+			Syntax Tree for more of Z's features.
+		</p>
+		<h2>15th April</h2>
+		<p>
+			Today focused on finishing the Syntax-Checker, and implementing
+			the compiler to Python. An error was found in the syntax-checker
+			regarding scopes. Some keywords end a scope, while others end a
+			structure. A distinction was made and this solved an issue whereby
+			the end of the program was reached because too many scopes were
+			exited, thus leading to the end of the input by exiting the PROG
+			scope.<br>
+			The compiler included special functions for converting input from
+			the user to numbers or strings depending on the input data. This
+			was achieved by including a Python function in the outputed code.<br>
+			As a test of the compiler, a fizzbuzz program was successfully
+			written.
+		</p>
+		<h2>16th April</h2>
+		<p>
+			Today focused on polishing the compiler some more. The Python
+			program was supplemented with another function, allowing
+			variables of different types to be cast and used in assignment
+			statements. This meant casting the value to be assigned to the
+			data type of the variable to hold the value. This means that if
+			<code>A1</code> holds the value <code>Hi</code>, then
+			<code>= A1 2 +</code> will result in <code>A1</code> having the
+			value <code>Hi2</code>.<br>
+			To further test the compiler, Modulo, Fibonnaci and Squares
+			programs were written and compiled and run successfully.
+		</p>
+	</article>
+	<article>
+		<h1>Hol.W2</h1>
+		<p>
+			Work has been delayed by a week, but this is works with the
+			Project Plan which allows for extra buffering should delays
+			be encountered in development.
+		</p>
+	</article>
+	<article>
+		<h1>T2W1</h1>
+		<h2>28th April</h2>
+		<p>
+			Begin the process of cleaning up folder structure, and think
+			about a pre-compile stage to filter lexical tokens.
+		</p>
+		<h2>30th April</h2>
+		<p>
+			
+		</p>
+	</article>
+	<article>
+		<h1>T2W2</h1>
+	</article>
+	<article>
+		<h1>T2W3</h1>
+	</article>
+	<article>
+		<h1>T2W4</h1>
+	</article>
+	<article>
+		<h1>T2W5</h1>
+	</article>
+	<article>
+		<h1>T2W6</h1>
+	</article>
+</body>
+</html>
