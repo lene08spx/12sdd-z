@@ -1,1 +1,1 @@
-@CALL deno -A '%~dp0..\.ts' %*
+@CALL deno -A "%~dp0..\src\main.ts" %*
