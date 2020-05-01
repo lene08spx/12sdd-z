@@ -1,6 +1,6 @@
 import { lex } from "./lex.ts";
 import { parse } from "./parse.ts";
-import { compileToPython } from "./compile.ts";
+//import { compileToPython } from "./compile.ts";
 
 
 const ZedConfig = {
@@ -10,9 +10,12 @@ const ZedConfig = {
 };
 
 
-function zedCompile(src: Deno.Reader, out: Deno.Writer) {
-  const tokens = lex(src);
+async function zedCompile(src: Deno.Reader, out: Deno.Writer) {
+  const tokens = await lex(src);
   const parseResult = parse(tokens);
-  compileToPython(parseResult.tree, out);
+  //compileToPython(parseResult, out);
 }
 
+const tokens = await lex(await Deno.open("fizzbuzz.z"));
+const parseResult = parse(tokens);
+console.log(parseResult["code"]);
