@@ -147,5 +147,5 @@ const compileTargets = {
 
 //returns number of bytes written
 export async function compile(p: Syntax.Program, w: Deno.Writer, target: keyof typeof compileTargets) {
-  return out.write(encode(compileTargets[target].compile(p)));
+  return w.write(encode(compileTargets[target].compile(p)));
 }
