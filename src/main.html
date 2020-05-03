@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Z IDE</title>
+  <style>
+    @font-face {
+      font-family: Cascadia;
+      src: url(CascadiaMono.ttf);
+    }
+    :root{box-sizing:border-box;font-family:Cascadia;}
+    *,*::before,*::after{box-sizing:inherit;}
+    body {
+      position: relative;
+      margin: 0 auto;
+      width: 800px;
+    }
+    nav {
+      display: grid;
+      position: sticky;
+      z-index: 1;
+      grid-template-columns: repeat(3, 10%) 1fr;
+      border-bottom: 2px solid black;
+    }
+    .menuItem {
+      height: 40px;
+      overflow: hidden;
+      cursor: default;
+    }
+    .menuTitle {
+      display: block;
+      margin: 0;
+      padding: 4px;
+      height: 42px;
+      border-left: 2px solid black;
+      text-align: center;
+      font-size: 25px;
+      font-weight: bold;
+    }
+    .menuItem:last-of-type .menuTitle {border-right: 2px solid black;}
+    .menuItem:hover {overflow: visible;}
+    .menuItem:hover > .menuTitle {
+      background-color: #eeeeee;
+    }
+    .menuList {
+      position: relative;
+      box-sizing: content-box;
+      width: 170%;
+      border-left: 2px solid black;
+      border-right: 2px solid black;
+      border-bottom: 2px solid black;
+    }
+    .menuList > button {
+      box-sizing: border-box;
+      width: 100%;
+      font-size: 20px;
+      border: none;
+      outline: none;
+      text-align: left;
+      font-family:Cascadia;
+      background-color: #eeeeee;
+    }
+    .menuList > button::before {content: "- ";}
+    .menuList > button:hover {background-color: lightskyblue;}
+    nav > h1 {
+      margin: 0;
+      padding: 4px;
+      width: 100%;
+      text-align: right;
+    }
+    main {
+      position: relative;
+      z-index: 0;
+      overflow-x: scroll;
+      border-left: 2px solid black;
+      border-right: 2px solid black;
+      border-bottom: 2px solid black;
+    }
+    #codeInput {
+      display: block;
+      position: relative;
+      padding: 10px;
+      padding-left: 50px;
+      width: 100%;
+      height: 40px;
+      font-family: Cascadia;
+      font-size: 20px;
+      resize: none;
+      outline: none;
+      border: none;
+      color: transparent;
+      caret-color: black;
+      white-space: pre;
+      line-height: 1.2;
+      overflow: hidden;
+    }
+    #codeInput::selection {
+      color: transparent;
+      background-color: deepskyblue;
+    }
+    #codePreview {
+      display: block;
+      position: absolute;
+      top: 0;
+      pointer-events: none;
+      margin: 0;
+      padding: 10px;
+      padding-left: 10px;
+      border-left: 40px solid #eeeeee;
+      width: 100%;
+      height: 100%;
+      line-height: 1.2;
+      font-family: Cascadia;
+      font-size: 20px;
+      counter-reset: lineNo;
+    }
+    #codePreview > span {
+      display: block;
+      counter-increment: lineNo;
+    }
+    #codePreview > span::before {
+      position: absolute;
+      width: 40px;
+      left: -45px;
+      text-align: right;
+      content: counter(lineNo);
+    }
+    #codePreview > span .keyword {
+      font-weight: bold;
+    }
+    #codePreview > span .string {
+      color: green;
+    }
+    #codePreview > span .number {
+      color: rgb(179, 116, 0);
+    }
+    #codePreview > span .compare {
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="menuItem">
+      <span class="menuTitle">File</span>
+      <div class="menuList">
+        <button>New</button>
+        <button>Open</button>
+        <button>Info</button>
+        <button>Run</button>
+      </div>
+    </div>
+    <div class="menuItem">
+      <span class="menuTitle">Edit</span>
+      <div class="menuList">
+        <button>Cut</button>
+        <button>Copy</button>
+        <button>Paste</button>
+        <button>Settings</button>
+      </div>
+    </div>
+    <div class="menuItem">
+      <span class="menuTitle">Help</span>
+      <div class="menuList">
+        <button>Editor</button>
+        <button>Z Lang</button>
+        <button>About</button>
+      </div>
+    </div>
+    <h1>The Z Programming Language</h1>
+  </nav>
+  <main>
+    <textarea id="codeInput" spellcheck="false"></textarea>
+    <pre id="codePreview"></pre>
+  </main>
+  <script>
+    function htmlEntities(str) {
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    const mainBlock = document.getElementsByTagName("main")[0];
+    const codeInput = document.getElementById("codeInput");
+    const codePreview = document.getElementById("codePreview");
+    codeInput.addEventListener("input", (e)=>{
+      codeInput.style.width="";codeInput.style.width = codeInput.scrollWidth + ((codeInput.scrollWidth > mainBlock.clientWidth) ? 15 : 0) + "px";
+      codeInput.style.height="";codeInput.style.height = codeInput.scrollHeight + 15 + "px"
+      const highlighted = lex(codeInput.value);
+      codePreview.innerHTML = "<span>"+highlighted.replace(/\n/g, " </span><span>")+"</span>";
+    });
+    codePreview.innerHTML = "<span></span>";
+    codeInput.style.height="";codeInput.style.height = codeInput.scrollHeight + 15 + "px"
+
+    const TOKEN_RULES = {
+    "keyword": "(PROG|ENDPROG|SWITCH|WHEN|DO|ENDDO|ENDSWITCH|IF|OTHERWISE|ENDIF|FOR|FROM|TO|BY|ENDFOR|UNTIL|ENDWHEN|OUT|IN)\\b",
+    "number": "([0-9]+)(\\.[0-9]+)?",
+    "math": "\\+|\\-|\\*|\\/",
+    "compare": "<=|>=|<|>|==|&&|\\|\\||!|(AND|NOT|OR)\\b",
+    "special": ":|\\[|\\]|=",
+    "string": "\"([\x20\x21\x23-\x7E])*\"",
+    "variable": "([A-Z]([0-9])*)\\b",
+    "generic": "([A-Z]+)\\b"
+  };
+  const zedRegexRules = [];
+  for (let [k, v] of Object.entries(TOKEN_RULES)) zedRegexRules.push(`(?<${k}>${v})`);
+  const zedTokenRegex = new RegExp(`(${zedRegexRules.join("|")})`,"g");
+
+  function getToken(match) {
+    let type;
+    let value;
+    for (let [k,v] of Object.entries(match.groups)) {
+      // The only available group is not undefined.
+      if (v !== undefined){
+        type=k;
+        value=v;
+        break;
+      }
+    }
+    return {
+      type: type,
+      value: value,
+      pos: match.index
+    };
+  }
+
+  function lex(text) {
+    const testResult = text.matchAll(zedTokenRegex)
+    const tokenList = [];
+    for (const match of testResult) {
+      tokenList.push(getToken(match));
+    }
+    let tok;
+    while (tok = tokenList.pop()) {
+      text = text.slice(0,tok.pos)+`<span class="${tok.type}">`+htmlEntities(tok.value)+`</span>`+text.slice(tok.pos+tok.value.length);
+    }
+    return text;
+  }
+  </script>
+</body>
+</html>

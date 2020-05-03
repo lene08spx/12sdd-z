@@ -1,16 +1,31 @@
 import { lex } from "./lex.ts";
 import { parse } from "./parse.ts";
 import { compile } from "./compile.ts";
+import { parsePath } from "./deps.ts";
 
-const zedConfig = {
+export const zedConfig = {
   name: "zed",
   version: "v0.0.1",
   description: "A compiler for the Z Programming Language"
 };
 
+interface CompilationResult {
+  buffer: Deno.Buffer;
+  time: number;
+}
+
 // returns number of bytes written.
-export async function zedCompile(src: Deno.Reader, out: Deno.Writer): Promise<number> {
-  return await compile(parse(await lex(src)), out, "python3");
+export async function zedCompile(filename: string): Promise<CompilationResult> {
+  const startTime = Date.now();
+  const source = await Deno.open(filename);
+  const lexResult = await lex(source);
+  const syntaxTree = parse(lexResult);
+  const compileBuffer = compile(syntaxTree, "python3");
+  const endTime = Date.now();
+  return {
+    buffer: compileBuffer,
+    time: endTime-startTime
+  };
 }
 
 function printHelp() {
@@ -32,20 +47,18 @@ if (import.meta.main) {
     if (Deno.args[0] === "run") {
       let filename = Deno.args[1];
       if (filename && filename.endsWith(".z")) {
-        console.log("Compiling...", filename)
-        const sourceFile = await Deno.open(filename);
-        const tempFile = await Deno.makeTempFile();
-        await zedCompile(
-          sourceFile,
-          await Deno.create(tempFile)
-        );
-        console.log("Running...");
+        // compile source
+        console.log("Compile", parsePath(filename).base);
+        const compileResult = await zedCompile(filename);
+        console.log(`Took ${compileResult.time}ms.`);
+        // hold output in temp-file
+        const tempPath = await Deno.makeTempFile({prefix:"zed-obj-"});
+        const tempFile = await Deno.copy(compileResult.buffer, await Deno.create(tempPath));
         const proc = Deno.run({
-          cmd: ["python", tempFile]
+          cmd: ["python", tempPath]
         });
         await proc.status();
-        await Deno.remove(tempFile);
-        console.log("Done!");
+        await Deno.remove(tempPath);
       } else {
         console.log("Nothing to run.");
       }
