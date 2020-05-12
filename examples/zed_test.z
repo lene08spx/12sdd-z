@@ -1,6 +1,44 @@
 PROG TESTZED
+
   = A1 0:
   WHEN < A1 10 DO
-    OUT["A1 : "+A1]
+    OUT["A1 : "+A1]:
+    = A1 1+:
   ENDDO ENDWHEN
+
+  = A1 0:
+  REPEAT DO
+    = A1 1+:
+    ENDDO
+    UNTIL >= A1 5
+  ENDREPEAT
+
+  FOR A1 FROM 0 TO 8 BY 1 DO
+    OUT["FOR : "+A1]:
+  ENDDO ENDFOR
+
+  = A1 0:
+  IF AND !== A1 1 == 0 0
+    DO
+      OUT["IF PASSED"]:
+    ENDDO
+  OTHERWISE
+    DO
+      OUT["IF FAILED"]:
+    ENDDO
+  ENDIF
+
+  = B1 "HELLO":
+  SWITCH B1
+    WHEN "HELLO" DO
+      OUT["SWITCH PASSED"]:
+    ENDDO
+    WHEN "HALLO" DO
+      OUT["SWITCH FAILED"]:
+    ENDDO
+  ENDSWITCH
+
+  = C1 IN["PROMPT: "]:
+  OUT["INPUT: "+C1]:
+
 ENDPROG
