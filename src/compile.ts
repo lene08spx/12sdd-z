@@ -121,7 +121,7 @@ class PythonTarget {
     for (let val of s.values) {
       this.buffer.writeSync(encode(`${val},`));
     }
-    this.buffer.writeSync(encode(")\n"));
+    this.buffer.writeSync(encode("sep='')\n"));
   }
 }
 

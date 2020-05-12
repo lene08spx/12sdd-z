@@ -131,10 +131,23 @@
 		</p>
 	</article>
 	<article>
-		<h1>T2W2</h1>
-	</article>
-	<article>
 		<h1>T2W3</h1>
+		<h2>13th May 2020</h2>
+		<img src="log-2020-05-13-testcode.png">
+		<h3>Error: Not parsing end of statement correctly.</h3>
+		<img src="log-2020-05-13-testerror.png">
+		<img src="log-2020-05-13-testdebug.png">
+		<img src="log-2020-05-13-testfix.png">
+		<p>
+			Accidentally commented a line that removed the closing "]" for OUTPUT statement.
+		</p>
+		<h3>Error: Missing end of statement throws compilation.</h3>
+		<img src="log-2020-05-13-test2error.png">
+		<p>
+			Turns out that t.shift() was removing the token on error,
+			and not allowing a recovery. Replaced with t[0].
+		</p>
+		<img src="log-2020-05-13-test2fix.png">
 	</article>
 	<article>
 		<h1>T2W4</h1>

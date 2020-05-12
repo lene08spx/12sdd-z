@@ -220,17 +220,11 @@
     function htmlEntities(str) {
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
+    window.addEventListener("keydown",e=>{if(e.key == "Tab"){e.preventDefault();return false;}});
     const mainBlock = document.getElementsByTagName("main")[0];
+    /** @type{HTMLTextAreaElement} */
     const codeInput = document.getElementById("codeInput");
     const codePreview = document.getElementById("codePreview");
-    codeInput.addEventListener("input", (e)=>{
-      codeInput.style.width="";codeInput.style.width = codeInput.scrollWidth + ((codeInput.scrollWidth > mainBlock.clientWidth) ? 15 : 0) + "px";
-      codeInput.style.height="";codeInput.style.height = codeInput.scrollHeight + 15 + "px"
-      const highlighted = lex(codeInput.value);
-      codePreview.innerHTML = "<span>"+highlighted.replace(/\n/g, " </span><span>")+"</span>";
-    });
-    codePreview.innerHTML = "<span></span>";
-    codeInput.style.height="";codeInput.style.height = codeInput.scrollHeight + 15 + "px"
 
     const TOKEN_RULES = {
     "keyword": "\\b(PROG|ENDPROG|SWITCH|WHEN|DO|ENDDO|ENDSWITCH|IF|OTHERWISE|ENDIF|FOR|FROM|TO|BY|ENDFOR|UNTIL|ENDWHEN|OUT|IN)\\b",
@@ -245,6 +239,35 @@
   const zedRegexRules = [];
   for (let [k, v] of Object.entries(TOKEN_RULES)) zedRegexRules.push(`(?<${k}>${v})`);
   const zedTokenRegex = new RegExp(`(${zedRegexRules.join("|")})`,"g");
+
+  /** @type{Storage} */
+  const pageStorage = window["localStorage"];
+  window.addEventListener("load",e=>{
+    codeInput.value = pageStorage.getItem("userCode");
+    highlightPreview();
+  });
+
+  codeInput.addEventListener("keydown", function(e){
+    if (e.key === "Tab") {
+      const initialPos = this.selectionStart+2;
+      this.value = this.value.slice(0,this.selectionStart)+"  "+this.value.slice(this.selectionEnd);
+      this.setSelectionRange(initialPos,initialPos);
+      e.preventDefault();
+      highlightPreview();
+      return false;
+    }
+  });
+  
+  function highlightPreview(){
+    codeInput.style.width="";codeInput.style.width = codeInput.scrollWidth + ((codeInput.scrollWidth > mainBlock.clientWidth) ? 15 : 0) + "px";
+    codeInput.style.height="";codeInput.style.height = codeInput.scrollHeight + 15 + "px"
+    const highlighted = lex(codeInput.value);
+    codePreview.innerHTML = "<span>"+highlighted.replace(/\n/g, " </span><span>")+"</span>";
+  }
+  codeInput.addEventListener("input", (e)=>{
+    highlightPreview();
+    storeCode();
+  });
 
   function getToken(match) {
     let type;
@@ -276,6 +299,11 @@
     }
     return text;
   }
+  
+  function storeCode() {
+    pageStorage.setItem("userCode", codeInput.value);
+  }
+
   </script>
 </body>
 </html>

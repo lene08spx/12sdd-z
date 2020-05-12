@@ -30,9 +30,10 @@ function testToken(o: Omit<TokenTestOptions, "errorMessage"> = {}): boolean {
 function endOfInstruction(t: Token[], assert = false) {
   try {
     assertToken({token: t[0], type: "special", value: ":"});
-    t.shift();
+    //console.log("#",t.shift());
+    //console.log(t);
   } catch {
-    if (assert) throw new ParserErrors.ExpectedToken(":", t.shift()!.line);
+    if (assert) throw new ParserErrors.ExpectedToken(":", t[0].line);
   }
 }
 
@@ -42,7 +43,7 @@ export namespace Syntax {
   export class ZedVariable extends String {}
   export class Input {
     prompt: string;
-    constructor(t: Token[]) {
+    constructor(t: Token[], e: Error[]) {
       assertToken({token: t[0], type: "special", value: "["}); t.shift();
       this.prompt = assertToken({token: t[0], type: "string", msg: "Expected mandatory string"}).value; t.shift();
       assertToken({token: t[0], type: "special", value: "]"}); t.shift();
@@ -53,7 +54,7 @@ export namespace Syntax {
     invert: boolean = false;
     left: ZedVariable | ZedString | ZedNumber | Condition;
     right: ZedVariable | ZedString | ZedNumber | Condition;
-    constructor(t: Token[]) {
+    constructor(t: Token[], e: Error[]) {
       if (testToken({token: t[0], type: "compare", value: "!"}) || testToken({token: t[0], type: "compare", value: "NOT"})) {
         this.invert = true; t.shift();
       }
@@ -62,31 +63,31 @@ export namespace Syntax {
       if (testToken({token: t[0], type: "variable"})) this.left = new ZedVariable(t.shift()!.value);
       else if (testToken({token: t[0], type: "string"})) this.left = new ZedString(t.shift()!.value);
       else if (testToken({token: t[0], type: "number"})) this.left = new ZedNumber(t.shift()!.value);
-      else this.left = new Condition(t);
+      else this.left = new Condition(t, e);
       if (testToken({token: t[0], type: "variable"})) this.right = new ZedVariable(t.shift()!.value);
       else if (testToken({token: t[0], type: "string"})) this.right = new ZedString(t.shift()!.value);
       else if (testToken({token: t[0], type: "number"})) this.right = new ZedNumber(t.shift()!.value);
-      else this.right = new Condition(t);
+      else this.right = new Condition(t, e);
     }
   }
   export class Assign {
     variable: ZedVariable;
     value: ZedVariable | ZedString | ZedNumber | Input;
     operator?: string;
-    constructor(t: Token[]) {
+    constructor(t: Token[], e: Error[]) {
       this.variable = new ZedVariable(assertToken({token: t[0], type: "variable"}).value); t.shift();
       assertToken({token:t[0]});
       if (testToken({token: t[0], type: "variable"})){ this.value = new ZedVariable(t[0].value); t.shift(); }
       else if (testToken({token: t[0], type: "string"})){ this.value = new ZedString(t[0].value); t.shift(); }
       else if (testToken({token: t[0], type: "number"})){ this.value = new ZedNumber(t[0].value); t.shift(); }
-      else if (testToken({token: t[0], type: "keyword", value: "IN"})){ t.shift(); this.value = new Input(t); }
+      else if (testToken({token: t[0], type: "keyword", value: "IN"})){ t.shift(); this.value = new Input(t, e); }
       else throw new ParserErrors.UnexpectedToken(t[0], "Expected a value for assignment near line "+t[0].line);
       if (testToken({token: t[0], type: "math"})) this.operator = t.shift()!.value;
     }
   }
   export class Output {
     values: (ZedNumber|ZedString|ZedVariable)[] = [];
-    constructor(t: Token[]) {
+    constructor(t: Token[], e: Error[]) {
       assertToken({token: t[0], type: "special", value: "["}); t.shift();
       // test mandatory value
       if (testToken({token: t[0], type: "variable"})) this.values.push(new ZedVariable(t.shift()!.value));
@@ -101,27 +102,29 @@ export namespace Syntax {
         else if (testToken({token: t[0], type: "number"})) this.values.push(new ZedNumber(t.shift()!.value));
         else throw new ParserErrors.UnexpectedToken(t[0], "Expected another output after the '+'");
       }
+      // shift the closing "]"
       t.shift();
     }
   }
   export class PreTest {
     condition: Condition;
     code: CodeBlock;
-    constructor(t: Token[]) {
-      this.condition = new Condition(t);
+    constructor(t: Token[], e: Error[]) {
+      this.condition = new Condition(t, e);
       assertToken({token: t[0], type: "keyword", value: "DO"}); t.shift();
-      this.code = new CodeBlock(t, "ENDDO");
+      this.code = new CodeBlock(t, e, "ENDDO");
       assertToken({token: t[0], type: "keyword", value: "ENDWHEN"}); t.shift();
     }
   }
   export class PostTest {
     condition: Condition;
     code: CodeBlock;
-    constructor(t: Token[]) {
+    constructor(t: Token[], e: Error[]) {
       assertToken({token: t[0], type: "keyword", value: "DO"}); t.shift();
-      this.code = new CodeBlock(t, "ENDDO");
+      this.code = new CodeBlock(t, e, "ENDDO");
       assertToken({token: t[0], type: "keyword", value: "UNTIL"}); t.shift();
-      this.condition = new Condition(t);
+      this.condition = new Condition(t, e);
+      assertToken({token: t[0], type: "keyword", value: "ENDREPEAT"}); t.shift();
     }
   }
   export class CountLoop {
@@ -130,7 +133,7 @@ export namespace Syntax {
     to: ZedNumber;
     by: ZedNumber;
     code: CodeBlock;
-    constructor(t: Token[]) {
+    constructor(t: Token[], e: Error[]) {
       this.variable = new ZedVariable(assertToken({token: t[0], type: "variable"}).value); t.shift();
       assertToken({token: t[0], type: "keyword", value: "FROM"}); t.shift();
       this.from = new ZedNumber(assertToken({token: t[0], type: "number"}).value); t.shift();
@@ -139,7 +142,7 @@ export namespace Syntax {
       assertToken({token: t[0], type: "keyword", value: "BY"}); t.shift();
       this.by = new ZedNumber(assertToken({token: t[0], type: "number"}).value); t.shift();
       assertToken({token: t[0], type: "keyword", value: "DO"}); t.shift();
-      this.code = new CodeBlock(t, "ENDDO");
+      this.code = new CodeBlock(t, e, "ENDDO");
       assertToken({token: t[0], type: "keyword", value: "ENDFOR"}); t.shift();
     }
   }
@@ -147,14 +150,14 @@ export namespace Syntax {
     condition: Condition;
     trueCode: Instruction[];
     falseCode?: Instruction[];
-    constructor(t: Token[]) {
-      this.condition = new Condition(t);
+    constructor(t: Token[], e: Error[]) {
+      this.condition = new Condition(t, e);
       assertToken({token: t[0], type: "keyword", value: "DO"}); t.shift();
-      this.trueCode = new CodeBlock(t, "ENDDO");
+      this.trueCode = new CodeBlock(t, e, "ENDDO");
       if (testToken({token: t[0], type: "keyword", value: "OTHERWISE"})) {
         t.shift();
         assertToken({token: t[0], type: "keyword", value: "DO"}); t.shift();
-        this.falseCode = new CodeBlock(t, "ENDDO");
+        this.falseCode = new CodeBlock(t, e, "ENDDO");
       }
       assertToken({token: t[0], type: "keyword", value: "ENDIF"}); t.shift();
     }
@@ -162,7 +165,7 @@ export namespace Syntax {
   export class Switch {
     variable: ZedVariable;
     whenValueThenCode: [(ZedNumber|ZedString), Instruction[]][] = [];
-    constructor(t: Token[]) {
+    constructor(t: Token[], e: Error[]) {
       this.variable = new ZedVariable(assertToken({token: t[0], type: "variable"}).value); t.shift();
       while (true) {
         if (testToken({token: t[0], type: "keyword", value: "ENDSWITCH"})) break;
@@ -172,14 +175,14 @@ export namespace Syntax {
         else if (testToken({token: t[0], type: "number"})) value = new ZedNumber(t.shift()!.value);
         else throw new ParserErrors.UnexpectedToken(t[0], "SWITCH expected a number or string.");
         assertToken({token: t[0], type: "keyword", value: "DO"}); t.shift();
-        const thenCode = new CodeBlock(t, "ENDDO");
+        const thenCode = new CodeBlock(t, e, "ENDDO");
         this.whenValueThenCode.push([value, thenCode]);
       }
       assertToken({token: t[0], type: "keyword", value: "ENDSWITCH"}); t.shift();
     }
   }
   export class CodeBlock extends Array<Instruction> {
-    constructor(t: Token[], endOfScope: string) {
+    constructor(t: Token[], e: Error[], endOfScope: string) {
       super();
       while (true) {
         try {
@@ -188,28 +191,29 @@ export namespace Syntax {
           endOfInstruction(t);
           // test end of scope
           const token = t.shift()!;
+          //console.log("@",token);
           if (token.value === endOfScope) break;
           switch (token.value) {
             case "=":
-              this.push(new Assign(t)); endOfInstruction(t, true); break;
+              this.push(new Assign(t, e)); endOfInstruction(t, true); break;
             case "OUT":
-              this.push(new Output(t)); endOfInstruction(t, true); break;
+              this.push(new Output(t, e)); endOfInstruction(t, true); break;
             case "WHEN":
-              this.push(new PreTest(t)); endOfInstruction(t, false); break;
+              this.push(new PreTest(t, e)); endOfInstruction(t, false); break;
             case "REPEAT":
-              this.push(new PostTest(t)); endOfInstruction(t, false); break;
+              this.push(new PostTest(t, e)); endOfInstruction(t, false); break;
             case "FOR":
-              this.push(new CountLoop(t)); endOfInstruction(t, false); break;
+              this.push(new CountLoop(t, e)); endOfInstruction(t, false); break;
             case "IF":
-              this.push(new Select(t)); endOfInstruction(t, false); break;
+              this.push(new Select(t, e)); endOfInstruction(t, false); break;
             case "SWITCH":
-              this.push(new Switch(t)); endOfInstruction(t, false); break;
+              this.push(new Switch(t, e)); endOfInstruction(t, false); break;
             default:
               throw new ParserErrors.UnhandledToken(token);
           }
-        } catch (e) {
-          console.log(e);
-          // if unexpectedtokenerror, test if end of scope character, otherwise throw
+        } catch (err) {
+          if (err instanceof ParserErrors.EndOfTokens) break;
+          e.push(err);
         }
       }
     }
@@ -217,10 +221,10 @@ export namespace Syntax {
   export class Program {
     name: string;
     code: CodeBlock;
-    constructor(t: Token[]) {
+    constructor(t: Token[], e: Error[]) {
       assertToken({token: t.shift(), type: "keyword", value: "PROG"});
       this.name = assertToken({token: t.shift(), type: "generic"}).value;
-      this.code = new CodeBlock(t, "ENDPROG");
+      this.code = new CodeBlock(t, e, "ENDPROG");
     }
   }
   export type Instruction = PreTest | PostTest | CountLoop | Select | Switch | Assign | Output;
@@ -251,6 +255,10 @@ namespace ParserErrors {
 }
 
 
-export function parse(t: Token[]): Syntax.Program {
-  return new Syntax.Program(t);
+export function parse(t: Token[]) {
+  const errors: Error[] = [];
+  const program = new Syntax.Program(t, errors);
+  return {
+    program, errors
+  };
 }

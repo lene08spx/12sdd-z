@@ -1,14 +1,16 @@
 import { BufReader, decode } from "./deps.ts";
 
+/// END REPEAT
+
 const TOKEN_RULES = {
-  "keyword": "(PROG|ENDPROG|SWITCH|WHEN|DO|ENDDO|ENDSWITCH|IF|OTHERWISE|ENDIF|FOR|FROM|TO|BY|ENDFOR|UNTIL|ENDWHEN|OUT|IN)\\b",
-  "number": "([0-9]+)(\\.[0-9]+)?",
+  "keyword": "\\b(PROG|ENDPROG|SWITCH|WHEN|DO|ENDDO|ENDSWITCH|IF|OTHERWISE|ENDIF|FOR|FROM|TO|BY|ENDFOR|UNTIL|ENDWHEN|ENDREPEAT|OUT|IN)\\b",
+  "number": "\\b([0-9]+)(\\.[0-9]+)?\\b",
   "math": "\\+|\\-|\\*|\\/",
-  "compare": "<=|>=|<|>|==|&&|\\|\\||!|(AND|NOT|OR)\\b",
+  "compare": "<=|>=|<|>|==|&&|\\|\\||!|\\b(AND|NOT|OR)\\b",
   "special": ":|\\[|\\]|=",
   "string": "\"([\x20\x21\x23-\x7E])*\"",
-  "variable": "([A-Z]([0-9])*)\\b",
-  "generic": "([A-Z]+)\\b",
+  "variable": "\\b([A-Z]([0-9])*)\\b",
+  "generic": "\\b([A-Z]+)\\b",
   "invalid": "[^\\s]+"
 };
 const zedRegexRules: string[] = [];

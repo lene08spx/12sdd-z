@@ -19,8 +19,14 @@ export async function zedCompile(filename: string): Promise<CompilationResult> {
   const startTime = Date.now();
   const source = await Deno.open(filename);
   const lexResult = await lex(source);
-  const syntaxTree = parse(lexResult);
-  const compileBuffer = compile(syntaxTree, "python3");
+  const parseResult = parse(lexResult);
+  if (parseResult.errors.length > 0) {
+    for (let e of parseResult.errors) {
+      console.log(e.name,"::",e.message);
+    }
+    Deno.exit(1);
+  }
+  const compileBuffer = compile(parseResult.program, "python3");
   const endTime = Date.now();
   return {
     buffer: compileBuffer,
