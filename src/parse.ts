@@ -30,7 +30,7 @@ function testToken(o: Omit<TokenTestOptions, "errorMessage"> = {}): boolean {
 function endOfInstruction(t: Token[], assert = false) {
   try {
     assertToken({token: t[0], type: "special", value: ":"});
-    //console.log("#",t.shift());
+    t.shift();
     //console.log(t);
   } catch {
     if (assert) throw new ParserErrors.ExpectedToken(":", t[0].line);
