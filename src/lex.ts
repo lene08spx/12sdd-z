@@ -3,7 +3,7 @@ import { BufReader, decode } from "./deps.ts";
 /// END REPEAT
 
 const TOKEN_RULES = {
-  "keyword": "\\b(PROG|ENDPROG|SWITCH|WHEN|DO|ENDDO|ENDSWITCH|IF|OTHERWISE|ENDIF|FOR|FROM|TO|BY|ENDFOR|UNTIL|ENDWHEN|ENDREPEAT|OUT|IN)\\b",
+  "keyword": "\\b(PROG|ENDPROG|SWITCH|WHEN|DO|ENDDO|ENDSWITCH|IF|OTHERWISE|ENDIF|FOR|FROM|TO|BY|ENDFOR|REPEAT|UNTIL|ENDWHEN|ENDREPEAT|OUT|IN)\\b",
   "number": "\\b([0-9]+)(\\.[0-9]+)?\\b",
   "math": "\\+|\\-|\\*|\\/",
   "compare": "<=|>=|<|>|==|&&|\\|\\||!|\\b(AND|NOT|OR)\\b",

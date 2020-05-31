@@ -1,51 +1,75 @@
-import { lex } from "./lex.ts";
-import { parse } from "./parse.ts";
-import { compile } from "./compile.ts";
-import { parsePath } from "./deps.ts";
+import { compileFile } from "./compile.ts";
+import { startIde } from "./ide.ts";
 
 export const zedConfig = {
   name: "zed",
-  version: "v0.0.1",
+  version: "0.0.1",
   description: "A compiler for the Z Programming Language"
 };
 
-interface CompilationResult {
-  buffer: Deno.Buffer;
-  time: number;
+async function runPython(script: string) {
+  const proc = Deno.run({
+    cmd: ["python", "-c", script]/*,
+    stderr: "piped", stdin: "inherit", stdout: "inherit"*/
+  });
+  await proc.status();
+  Deno.close(proc.rid);
 }
 
-// returns number of bytes written.
-export async function zedCompile(filename: string): Promise<CompilationResult> {
-  const startTime = Date.now();
-  const source = await Deno.open(filename);
-  const lexResult = await lex(source);
-  const parseResult = parse(lexResult);
-  if (parseResult.errors.length > 0) {
-    for (let e of parseResult.errors) {
-      console.log(e.name,"::",e.message);
-    }
-    Deno.exit(1);
-  }
-  const compileBuffer = compile(parseResult.program, "python3");
-  const endTime = Date.now();
-  return {
-    buffer: compileBuffer,
-    time: endTime-startTime
-  };
+async function subCompile(srcFile: string) {
+  const outFilename = srcFile.replace(/\.z$/m, "") + ".py";
+  const result = await compileFile(srcFile);
+  console.log(`Compilation took ${result.time}ms.`);
+  await Deno.writeFile(outFilename, result.buffer.bytes());
+  return outFilename;
 }
 
-function printHelp() {
-  console.log(zedConfig.name, zedConfig.version);
-  console.log(zedConfig.description);
-  console.log();
-  console.log("To compile and run a program:");
-  console.log("  zed run ./program.z");
-  console.log("To open the IDE:");
-  console.log("  zed dev");
-  console.log();
+function subHelp() {
+  console.log(zedConfig.name + " " + zedConfig.version + "\n" + zedConfig.description + "\n" );
+  console.log("USAGE:");
+  console.log("    zed compile <file>");
+  console.log("    zed edit [file]");
+  console.log("    zed help");
+  console.log("    zed repl");
+  console.log("    zed run <file>");
 }
 
 if (import.meta.main) {
+  // handle zed 'run' subcommand
+  if (
+    Deno.args[0] === "run" &&
+    Deno.args.length === 2
+  ) {
+    const compileResult = await compileFile(Deno.args[1]);
+    console.log(compileResult);
+    const str = new TextDecoder().decode(compileResult.buffer.bytes());
+    console.log(str);
+    await runPython(str);
+  }
+  // handle zed 'edit' subcommand
+  else if (
+    Deno.args[0] === "edit"
+  ) {
+    startIde();
+  }
+  // handle zed 'compile' subcommand
+  else if (
+    Deno.args[0] === "compile" &&
+    Deno.args.length === 2
+  ) {
+    subCompile(Deno.args[1]);
+  }
+  // default to zed 'help' subcommand
+  else {
+    subHelp();
+  }
+  // handle zed 'repl' subcommand
+  //else if (
+  //  cliFlags._[0] === "repl"
+  //) {
+  //
+  //}
+  /*
   if (Deno.args.length === 0) {
     printHelp();
   }
@@ -72,5 +96,5 @@ if (import.meta.main) {
     else {
       printHelp();
     }
-  }
+  }*/
 }

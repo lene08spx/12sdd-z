@@ -1,0 +1,258 @@
+@font-face {
+  font-family: Cascadia;
+  src: url("./CascadiaMono.ttf");
+}
+
+*,*::before,*::after{box-sizing:inherit;}
+:root {
+  --theme-border-width: 3px;
+  --theme-border-colour: black;
+  --theme-border: 3px solid black;
+  --theme-colour-bg1: #ffffff;
+  --theme-colour-bg2: #dddddd;
+  --theme-colour-bg3: #8fcfff;
+  --theme-colour-fg1: #000000;
+  --theme-font1: 20px Cascadia;
+  --theme-font2: 17px Cascadia;
+  /*
+  --theme-text-size: 18px;
+  --theme-text-colour: black;
+  --theme-text-family: Cascadia;
+  --theme-nav-bg: #ffffff;
+  --theme-nav-hover: #eeeeee;
+  --theme-nav-fg: #000000;
+  --theme-nav-border-colour: #000000;
+  --theme-nav-border-width: 2px;
+  --theme-nav-menu-colour: #eeeeee;
+  --theme-nav-menu-hover: #8fcfff;
+  --theme-editor-caret: #000000;
+  --theme-editor-selection: #00bfff;
+  --theme-editor-bg: #ffffff;
+  --theme-editor-text-colour: #000000;
+  --theme-editor-text-style: italic;
+  --theme-editor-text-weight: normal;
+  --theme-editor-string-colour: #007f00;
+  --theme-editor-string-style: normal;
+  --theme-editor-string-weight: normal;
+  --theme-editor-number-colour: #cf7000;
+  --theme-editor-number-style: normal;
+  --theme-editor-number-weight: normal;
+  --theme-editor-keyword-colour: #000000;
+  --theme-editor-keyword-style: normal;
+  --theme-editor-keyword-weight: bold;
+  --theme-editor-operator-colour: #000000;
+  --theme-editor-operator-style: italic;
+  --theme-editor-linecount-bg: #eeeeee;
+  --theme-editor-linecount-fg: #000000;
+  */
+  height: 100%;
+  box-sizing: border-box;
+  background-color: var(--theme-bg1);
+  color: var(--theme-colour-fg1);
+  font: var(--theme-font1);
+}
+
+body {
+  display: grid;
+  position: relative;
+  grid-auto-flow: row;
+  grid-template-rows: 40px 1fr;
+  margin: 0 auto;
+  width: 600px;
+  height: 100%;
+  min-height: 100%;
+}
+
+header {
+  display: grid;
+  grid-auto-flow: column;
+  border: var(--theme-border);
+  background-color: var(--theme-bg1);
+}
+
+header > h1 {
+  margin: auto;
+  font: var(--theme-font1);
+  font-weight: bold;
+  grid-row-start: 1;
+}
+
+header > button {
+  background-color: unset;
+  outline: none;
+  border: none;
+  border-left: var(--theme-border);
+  font-size: 28px;
+  overflow: hidden;
+  grid-row-start: 1;
+}
+header > button:hover {
+  cursor: pointer;
+  background-color: var(--theme-colour-bg3);
+}
+
+header > nav {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+
+header > nav > .menu-item {
+  display: grid;
+  position: relative;
+  grid-template-rows: 34px 1fr;
+  grid-auto-flow: row;
+  border-right: var(--theme-border);
+  height: min-content;
+}
+
+header > nav > .menu-item > .menu-title {
+  margin: auto;
+  font: var(--theme-font1);
+  font-style: italic;
+  font-weight: bold;
+}
+
+header > nav > .menu-item > .menu-list {
+  display: none;
+  box-sizing: content-box;
+  position: absolute;
+  grid-auto-flow: row;
+  z-index: 1;
+  top: 100%;
+  left: -3px;
+  width: max-content;
+  min-width: 100%;
+  background-color: var(--theme-colour-bg2);
+  border-bottom: var(--theme-border);
+  border-left: var(--theme-border);
+  border-right: var(--theme-border);
+}
+
+header > nav > .menu-item > .menu-list > button::before {
+  content: "- ";
+}
+header > nav > .menu-item > .menu-list > button {
+  background-color: unset;
+  border: none;
+  outline: none;
+  padding: 2px 10px;
+  text-align: left;
+  text-decoration: none;
+  color: var(--theme-colour-fg1);
+  font: var(--theme-font1);
+}
+header > nav > .menu-item > .menu-list > button:hover {
+  background-color: var(--theme-colour-bg3);
+  cursor: pointer;
+}
+
+header > nav > .menu-item:hover {
+  background-color: var(--theme-colour-bg2);
+}
+
+header > nav > .menu-item:hover > .menu-list {
+  display: grid;
+}
+
+main {
+  position: relative;
+  min-height: 100px;
+  border-left: var(--theme-border);
+  border-right: var(--theme-border);
+  border-bottom: var(--theme-border);
+  background-color: var(--theme-bg1);
+}
+
+/* Editor Specific */
+
+#editor-header {
+  grid-template-columns: 200px 1fr 40px;
+}
+
+#editor-main {
+  z-index: 0;
+  /*overflow: scroll;*/
+}
+
+#editor-input {
+  display: block;
+  height: 100%;
+  width: 100%;
+  padding: 10px;
+  resize: none;
+  outline: none;
+  border: none;
+  font: var(--theme-font2);
+  white-space: pre;
+  line-height: 1.2;
+  /*
+  display: block;
+  position: relative;
+  height: 100%;
+  border: 0;
+  padding: 10px;
+  outline: none;
+  font: var(--theme-font2);
+  white-space: pre;
+  line-height: 1.2;
+  resize: none;
+  overflow: hidden;
+  */
+}
+
+/*
+#editor-preview {
+  display: block;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 10px;
+  pointer-events: none;
+  font: var(--theme-font2);
+  white-space: pre;
+  line-height: 1.2;
+}
+*/
+
+/* Execute Specific */
+
+#execute-main {
+  display: grid;
+  grid-template-columns: 1fr 80px;
+  grid-template-rows: 1fr 40px;
+  overflow: initial;
+}
+
+#execute-output {
+  grid-area: 1 / 1 / 2 / 3;
+  font: var(--theme-font2);
+  overflow: scroll;
+}
+
+#execute-input {
+  grid-area: 2 / 1 / 3 / 2;
+  padding: 10px;
+  border: none;
+  border-top: var(--theme-border);
+  font: var(--theme-font2);
+  outline: none;
+}
+
+#execute-enter {
+  grid-area: 2 / 2 / 3 / 3;
+  border: none;
+  border-top: var(--theme-border);
+  border-left: var(--theme-border);
+  font: var(--theme-font1);
+  font-style: italic;
+  font-weight: bold;
+  outline: none;
+}
+
+#execute-enter:hover {
+  background-color: var(--theme-colour-bg3);
+  cursor: pointer;
+}

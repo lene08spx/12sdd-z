@@ -1,5 +1,6 @@
 import { encode } from "./deps.ts";
-import { Syntax } from "./parse.ts";
+import { lex } from "./lex.ts";
+import { Syntax, parse } from "./parse.ts";
 
 class PythonTarget {
   private indentLevel = 0;
@@ -132,4 +133,30 @@ const compileTargets = {
 //returns number of bytes written
 export function compile(p: Syntax.Program, target: keyof typeof compileTargets = "python3"): Deno.Buffer {
   return new compileTargets[target](p).buffer;
+}
+
+interface CompilationResult {
+  buffer: Deno.Buffer;
+  time: number;
+}
+
+// returns number of bytes written.
+export async function compileFile(filename: string): Promise<CompilationResult> {
+  const source = await Deno.open(filename);
+  const startTime = performance.now();
+  const lexResult = await lex(source);
+  const parseResult = parse(lexResult);
+  if (parseResult.errors.length > 0) {
+    for (let e of parseResult.errors) {
+      console.log(e.name,"::",e.message);
+    }
+    Deno.exit(1);
+  }
+  const compileBuffer = compile(parseResult.program, "python3");
+  const endTime = performance.now();
+  Deno.close(source.rid);
+  return {
+    buffer: compileBuffer,
+    time: Math.trunc(endTime-startTime)
+  };
 }

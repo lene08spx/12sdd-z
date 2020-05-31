@@ -1,6 +1,9 @@
 # The Z Programming Language
 An exercise in writing a compiler.
 
+## Installation
+1. Windows Computer Required
+
 ## Exercise One: *Hello, World!*
 ```st
 PROG ONE

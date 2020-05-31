@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Zed-Edit</title>
+  <link href="./zed-edit.css" rel="stylesheet">
+  <meta charset="utf-8">
+</head>
+<body>
+  <header id="editor-header">
+    <nav>
+      <div class="menu-item">
+        <span class="menu-title">File</span>
+        <div class="menu-list">
+          <button>New</button>
+          <button>Open</button>
+          <button>Save</button>
+        </div>
+      </div>
+      <div class="menu-item">
+        <span class="menu-title">Help</span>
+        <div class="menu-list">
+          <button>Editor</button>
+          <button>Zed Lang</button>
+          <button>About</button>
+        </div>
+      </div>
+    </nav>
+    <h1>The Zed Programming Language</h1>
+    <button onclick="compileAndRun()">▶</button>
+  </header>
+  <main id="editor-main">
+    <textarea id="editor-input" spellcheck="false"></textarea>
+    <!--<pre id="editor-preview"></pre>-->
+  </main>
+  <script src="./zed-ide.js"></script>
+</body>
+</html>

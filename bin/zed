@@ -1,3 +1,3 @@
 #!/bin/sh
 BASEDIR=$(dirname "$0")
-deno run -A "$BASEDIR/../src/main.ts" "$@"
+"$BASEDIR/../lib/deno.exe" run -A "$BASEDIR/../src/main.ts" "$@"
