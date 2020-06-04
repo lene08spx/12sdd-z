@@ -3,6 +3,9 @@ An exercise in writing a compiler.
 
 ## Installation
 1. Windows Computer Required
+- python version of object code
+- dependencies versions
+- chrome: browser requirement
 
 ## Exercise One: *Hello, World!*
 ```st

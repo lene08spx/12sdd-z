@@ -1,5 +1,5 @@
 import { compileFile } from "./compile.ts";
-import { startIde } from "./ide.ts";
+import { IDE } from "./ide.ts";
 
 export const zedConfig = {
   name: "zed",
@@ -41,16 +41,18 @@ if (import.meta.main) {
     Deno.args.length === 2
   ) {
     const compileResult = await compileFile(Deno.args[1]);
-    console.log(compileResult);
+    //console.log(compileResult);
     const str = new TextDecoder().decode(compileResult.buffer.bytes());
-    console.log(str);
+    //console.log(str);
     await runPython(str);
   }
   // handle zed 'edit' subcommand
   else if (
     Deno.args[0] === "edit"
   ) {
-    startIde();
+    const ide = new IDE();
+    ide.start();
+    ide.open();
   }
   // handle zed 'compile' subcommand
   else if (

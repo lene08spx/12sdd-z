@@ -2,9 +2,45 @@
 <html>
 <head>
 	<title>Z Programming Language - Development Log</title>
+	<style>
+		@font-face {
+			font-family: Cascadia;
+			src: url("./CascadiaMono.ttf");
+		}
+		body {
+			margin: 0 auto 50px auto;
+			max-width: 800px;
+		}
+		body > h1 {
+			text-align: center;
+			font-family: Cascadia;
+			font-size: 40px;
+		}
+		article {
+			font-size: 14px;
+			font-family: Cascadia;
+			text-align: justify;
+		}
+		article > h1 {
+			font-size: 30px;
+			font-family: Cascadia;
+			font-weight: bold;
+			font-style: italic;
+			margin-bottom: 10px;
+		}
+		article > h2 {
+			margin: 10px 0 0 10px;
+			font-size: 20px;
+			font-family: Cascadia;
+			font-style: italic;
+		}
+		img {
+			max-width: 100%;
+		}
+	</style>
 </head>
 <body>
-	<h1>The Z Programming Language<br>Development Log 2020</h1>
+	<h1>- The Z Programming Language -<br>Development Log 2020</h1>
 	<article>
 		<h1>T1W10</h1>
 		<p>
@@ -135,8 +171,8 @@
 		<h2>13th May 2020</h2>
 		<img src="log-2020-05-13-testcode.png">
 		<h3>Error: Not parsing end of statement correctly.</h3>
-		<img src="log-2020-05-13-testerror.png">
-		<img src="log-2020-05-13-testdebug.png">
+		<img src="log-2020-05-13-testerror.png"><br>
+		<img src="log-2020-05-13-testdebug.png"><br>
 		<img src="log-2020-05-13-testfix.png">
 		<p>
 			Accidentally commented a line that removed the closing "]" for OUTPUT statement.
@@ -179,6 +215,14 @@
 	</article>
 	<article>
 		<h1>T2W6</h1>
+		<h2>3rd June 2020</h2>
+		<p>
+			The WebSocket interface works at a basic level. A script can be compiled
+			from user input on the editor, and run, accepting input and displaying output,
+			in the program execution screen.
+		</p>
+		<img src="./log-2020-06-02-samplecode.png">
+		<img src="./log-2020-06-02-sampleoutput.png">
 	</article>
 </body>
 </html>

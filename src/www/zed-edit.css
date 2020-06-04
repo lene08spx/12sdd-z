@@ -68,6 +68,7 @@ header {
   grid-auto-flow: column;
   border: var(--theme-border);
   background-color: var(--theme-bg1);
+  user-select: none;
 }
 
 header > h1 {
@@ -129,10 +130,12 @@ header > nav > .menu-item > .menu-list {
   border-right: var(--theme-border);
 }
 
-header > nav > .menu-item > .menu-list > button::before {
+header > nav > .menu-item > .menu-list > button::before,
+header > nav > .menu-item > .menu-list > a::before {
   content: "- ";
 }
-header > nav > .menu-item > .menu-list > button {
+header > nav > .menu-item > .menu-list > button,
+header > nav > .menu-item > .menu-list > a {
   background-color: unset;
   border: none;
   outline: none;
@@ -142,7 +145,8 @@ header > nav > .menu-item > .menu-list > button {
   color: var(--theme-colour-fg1);
   font: var(--theme-font1);
 }
-header > nav > .menu-item > .menu-list > button:hover {
+header > nav > .menu-item > .menu-list > button:hover,
+header > nav > .menu-item > .menu-list > a:hover {
   background-color: var(--theme-colour-bg3);
   cursor: pointer;
 }
@@ -230,6 +234,7 @@ main {
   grid-area: 1 / 1 / 2 / 3;
   font: var(--theme-font2);
   overflow: scroll;
+  white-space: pre;
 }
 
 #execute-input {

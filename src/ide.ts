@@ -1,48 +1,85 @@
-import { serve, ServerRequest, parsePath, exists, acceptWebSocket } from "./deps.ts";
-import { scriptHost, CompileErrors } from "./host.ts";
-
-class IDE {
-  #server: Ser;
-  constructor(port: number) {
-
-  }
-  async run(): Promise<void> {
-
-  }
-}
-c
-// need to run a websocket daemon, for running scripts.
+import { serve, Server, ServerRequest, parsePath, exists, acceptWebSocket } from "./deps.ts";
+import { ScriptHost, CompileErrors } from "./host.ts";
 
 const wwwPath = decodeURI(parsePath(import.meta.url).dir.replace("file:///",""))+"/www";
 
-export function startIde(port = 2654) {
-  // begin web service
-  const s = serve({port});
-  // open browser
-  Deno.run({ cmd: ["cmd", "/C", "start", "", `http://localhost:${port}/edit`], stdout: "null", stdin: "null", stderr: "null" });
-  // handle requests
-  (async function httpThread(){
-    for await (const r of s) {
-      if (r.url === "/") r.respond({status:308,headers:new Headers({"Location":"/edit"})});
-      else if (r.url === "/edit") pg_edit(r);
-      else if (r.url === "/execute" && r.method === "POST") pg_execute(r);
-      else if (r.url === "/op/compile" && r.method === "POST") op_compile(r);
-      else handleWwwDefault(r);
-    }
-  })();
-}
-
-async function pg_edit(r: ServerRequest): Promise<void> {
-  r.respond({
-    body: await Deno.readFile(wwwPath+"/edit.html")
-  });
-}
-
-/** POST: Body=CacheID */
-async function pg_execute(r: ServerRequest): Promise<void> {
-  r.respond({
-    body: await Deno.readFile(wwwPath+"/execute.html")
-  });
+export class IDE {
+  #server: Server;
+  #scriptHost = new ScriptHost();
+  constructor(port = 2020) {
+    this.#server = serve({ port });
+  }
+  async open(): Promise<void> {
+    const port = (this.#server.listener.addr as Deno.NetAddr).port;
+    const proc = Deno.run({
+      cmd: ["cmd", "/C", "start", "", `http://localhost:${port}/edit`]
+    });
+    await proc.status();
+    proc.close();
+  }
+  close() {
+    this.#server.close();
+  }
+  async start(): Promise<void> {
+    for await (const r of this.#server) this.handleRequest(r);
+  }
+  private async handleRequest(r: ServerRequest): Promise<void> {
+    if (r.url === "/") r.respond({status:308,headers:new Headers({"Location":"/edit"})});
+    else if (r.url === "/edit") this.httpServe(r, "/edit.html");
+    else if (r.url.startsWith("/execute")) this.httpServe(r, "/execute.html");
+    else if (r.url === "/op/compile" && r.method === "POST") this.opCompile(r);
+    else if (r.url.startsWith("/op/run")) this.opRun(r);
+    else this.httpServe(r);
+  }
+  private async httpServe(r: ServerRequest, filename?: string): Promise<void> {
+    if (filename === undefined) filename = r.url;
+    const fileExists = await exists(wwwPath+filename);
+    if (!fileExists) return r.respond({status:404});
+    const fileInfo = await Deno.stat(wwwPath+filename);
+    if (!fileInfo.isFile) return r.respond({status:403});
+    r.respond({
+      body: await Deno.readFile(wwwPath+filename)
+    });
+  }
+  /** Input (POST):
+   *    r.body => string => Zed Source Code
+   * 
+   *  Output (application/json):
+   *    hash => string => Unique identifier of source code
+   *    errors => Error[] => Generated during compilation
+   */
+  private async opCompile(r: ServerRequest): Promise<void> {
+    const sourceCode = await readBody(r);
+    const hash = await this.#scriptHost.compile(sourceCode);
+    return r.respond({
+      status: 200,
+      body: hash,
+      headers: new Headers({"Content-Type": "text/plain"})
+    });
+    /*
+    const pythonObjectCode = scriptHost.retrieve(registerResult);
+    console.log(pythonObjectCode);
+    const proc = Deno.run({
+      cmd: ["python", "-c", pythonObjectCode]
+    });
+    await proc.status();
+    Deno.close(proc.rid);
+    return r.respond({
+      status: 200,
+      body: registerResult
+    });
+    */
+  }
+  private async opRun(r: ServerRequest): Promise<void> {
+    const sock = await acceptWebSocket({
+      conn: r.conn,
+      bufWriter: r.w,
+      bufReader: r.r,
+      headers: r.headers
+    });
+    const hash = new URLSearchParams(r.url.split("?")[1]).get("id") ?? "";
+    this.#scriptHost.run(sock, hash);
+  }
 }
 
 async function readBody(r: ServerRequest): Promise<string> {
@@ -56,44 +93,3 @@ async function readBody(r: ServerRequest): Promise<string> {
   return new TextDecoder().decode(buf);
 }
 
-/** POST: Body=ZedSource. Return: CacheID */
-async function op_compile(r: ServerRequest): Promise<void> {
-  const sourceCode = await readBody(r);
-  const registeredCode = await scriptHost.register(sourceCode);
-  let responseBody: string;
-  let responseCode: number;
-  if (registeredCode instanceof CompileErrors) {
-    responseBody = JSON.stringify([/*CompilerErrors*/]);
-    responseCode = 418;
-  } else {
-    responseBody = registeredCode;
-    responseCode = 200;
-  }
-  return r.respond({
-    status: responseCode,
-    body: responseBody
-  });
-  /*
-  const pythonObjectCode = scriptHost.retrieve(registerResult);
-  console.log(pythonObjectCode);
-  const proc = Deno.run({
-    cmd: ["python", "-c", pythonObjectCode]
-  });
-  await proc.status();
-  Deno.close(proc.rid);
-  return r.respond({
-    status: 200,
-    body: registerResult
-  });
-  */
-}
-
-async function handleWwwDefault(r: ServerRequest): Promise<void> {
-  const fileExists = await exists(wwwPath+r.url);
-  if (!fileExists) return r.respond({status:404});
-  const fileInfo = await Deno.stat(wwwPath+r.url);
-  if (!fileInfo.isFile) return r.respond({status:403});
-  r.respond({
-    body: await Deno.readFile(wwwPath+r.url)
-  });
-}

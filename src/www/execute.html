@@ -4,15 +4,17 @@
   <title>Zed-Edit - Execute</title>
   <link href="./zed-edit.css" rel="stylesheet">
   <meta charset="utf-8">
+  <script src="./zed-ide.js" type="text/javascript"></script>
 </head>
 <body>
   <header id="execute-header">
     <h1>fibonacci.z</h1>
   </header>
   <main id="execute-main">
-    <div id="execute-output"></div>
+    <div id="execute-output"><span id="execute-output-text"></span><span id="execute-output-caret"></span></div>
     <input id="execute-input" type="text" spellcheck="false">
-    <button id="execute-enter">Enter</button>
+    <button id="execute-enter" onclick="sendInput()">Enter</button>
   </main>
+  <script>connectProcess()</script>
 </body>
 </html>
