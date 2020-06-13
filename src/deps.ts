@@ -1,4 +1,4 @@
-export { BufReader, StringReader } from "../lib/deno_std/io/mod.ts";
+export { StringReader } from "../lib/deno_std/io/mod.ts";
 export { encode, decode } from "../lib/deno_std/encoding/utf8.ts";
 export { parse as parsePath } from "../lib/deno_std/path/mod.ts";
 export { exists } from "../lib/deno_std/fs/exists.ts";

@@ -1,52 +1,43 @@
-import { BufReader, decode } from "./deps.ts";
+const newline = /[\r\n]/;
+const zedTokenRules = {
+  "keyword": /(?<keyword>\b(?:PROG|ENDPROG|DO|ENDDO|OUT|IN|IF|OTHERWISE|ENDIF|SWITCH|ENDSWITCH|FOR|FROM|TO|BY|ENDFOR|WHEN|ENDWHEN|REPEAT|UNTIL|ENDREPEAT)\b)/,
+  "operator": /(?<operator>\+|-|\*|\/|>=|<=|>|<|==|&&|\|\||!|:|\[|\]|=)/,
+  "string": /(?<string>"[ !#-~]*")/,
+  "number": /(?<number>\b\d+(?:\.\d+)?\b)/,
+  "variable": /(?<variable>\b[A-Z]\d+\b)/,
+  "other": /(?<other>[^\s]+)/,
+} as const;
+const zedToken = new RegExp(Object.values(zedTokenRules).map(v=>v.source).join("|"), "g");
 
-/// END REPEAT
-
-const TOKEN_RULES = {
-  "keyword": "\\b(PROG|ENDPROG|SWITCH|WHEN|DO|ENDDO|ENDSWITCH|IF|OTHERWISE|ENDIF|FOR|FROM|TO|BY|ENDFOR|REPEAT|UNTIL|ENDWHEN|ENDREPEAT|OUT|IN)\\b",
-  "number": "\\b([0-9]+)(\\.[0-9]+)?\\b",
-  "math": "\\+|\\-|\\*|\\/",
-  "compare": "<=|>=|<|>|==|&&|\\|\\||!|\\b(AND|NOT|OR)\\b",
-  "special": ":|\\[|\\]|=",
-  "string": "\"([\x20\x21\x23-\x7E])*\"",
-  "variable": "\\b([A-Z]([0-9])*)\\b",
-  "generic": "\\b([A-Z]+)\\b",
-  "invalid": "[^\\s]+"
-};
-const zedRegexRules: string[] = [];
-for (let [k, v] of Object.entries(TOKEN_RULES)) zedRegexRules.push(`(?<${k}>${v})`);
-const zedTokenRegex = new RegExp(`(${zedRegexRules.join("|")})`,"g");
-
+export type TokenType = keyof typeof zedTokenRules;
 export interface Token {
-  type: keyof typeof TOKEN_RULES;
+  type: TokenType;
   value: string;
   line: number;
+  position: number;
 }
 
-function getToken(regexGroups: Record<string,string>): Token {
-  for (let [k,v] of Object.entries(regexGroups)) {
-    // The only available group is not undefined.
-    if (v !== undefined) return {type: k, value: v, line: 0} as Token;
-  }
-  // All items should be captured in groups, otherwise throw error.
-  throw new Error("Ungrouped Token");
+function generateToken(m: RegExpMatchArray): Token {
+  // retrieve the entry in m.groups which is not undefined, this is the right token type and holds the desired value
+  const [ tokType, tokValue ] = Object.entries(m.groups??{}).filter(v=>v[1]!==undefined)[0];
+  return {
+    type: tokType as TokenType,
+    value: tokValue,
+    line: 0,
+    position: m.index ?? 0
+  };
 }
 
-export async function lex(r: Deno.Reader): Promise<Token[]> {
-  const buf = new BufReader(r);
+export function lex(source: string): Token[] {
+  const lines = source.split(newline);
   const tokenList: Token[] = [];
-  let currLine = 0;
-  let lineResult;
-  lineResult = await buf.readLine();
-  while (lineResult !== null) {
-    currLine++;
-    const testResult = decode(lineResult.line).matchAll(zedTokenRegex);
-    for (const match of testResult) {
-      const token = getToken(match.groups??{});
-      token.line = currLine;
+  for (let i = 0; i < lines.length; i++) {
+    const tokenMatches = lines[i].matchAll(zedToken);
+    for (let match of tokenMatches) {
+      const token = generateToken(match);
+      token.line = i;
       tokenList.push(token);
     }
-    lineResult = await buf.readLine();
   }
   return tokenList;
 }
