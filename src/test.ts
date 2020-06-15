@@ -9,6 +9,7 @@ import {
   ZedAssignment,
   ZedOutput,
   ZedCondition,
+  TokenArray
 } from "./parse.ts";
 
 Deno.test("lex", ()=>{
@@ -20,7 +21,7 @@ Deno.test("lex", ()=>{
 });
 
 Deno.test("ZedInOutParams->empty", ()=>{
-  const tokens = lex(`[]`);
+  const tokens = new TokenArray(lex(`[]`));
   const result = new ZedInOutParams(tokens);
   assertEquals(
     result,
@@ -29,7 +30,7 @@ Deno.test("ZedInOutParams->empty", ()=>{
 });
 
 Deno.test("ZedInOutParams->variable", ()=>{
-  const tokens = lex(`[Z80]`);
+  const tokens = new TokenArray(lex(`[Z80]`));
   const result = new ZedInOutParams(tokens);
   assertEquals(
     result,
@@ -38,7 +39,7 @@ Deno.test("ZedInOutParams->variable", ()=>{
 });
 
 Deno.test("ZedInOutParams->string", ()=>{
-  const tokens = lex(`["Hello"]`);
+  const tokens = new TokenArray(lex(`["Hello"]`));
   const result = new ZedInOutParams(tokens);
   assertEquals(
     result,
@@ -47,7 +48,7 @@ Deno.test("ZedInOutParams->string", ()=>{
 });
 
 Deno.test("ZedInOutParams->number", ()=>{
-  const tokens = lex(`[42]`);
+  const tokens = new TokenArray(lex(`[42]`));
   const result = new ZedInOutParams(tokens);
   assertEquals(
     result,
@@ -56,7 +57,7 @@ Deno.test("ZedInOutParams->number", ()=>{
 });
 
 Deno.test("ZedInOutParams->multiple", ()=>{
-  const tokens = lex(`[Z80+"Hello"+42]`);
+  const tokens = new TokenArray(lex(`[Z80+"Hello"+42]`));
   const result = new ZedInOutParams(tokens);
   assertEquals(
     result,
@@ -69,14 +70,14 @@ Deno.test("ZedInOutParams->multiple", ()=>{
 });
 
 Deno.test("ZedInOutParams->invalid", ()=>{
-  const tokens = lex(`[Z80,42]`);
+  const tokens = new TokenArray(lex(`[Z80,42]`));
   assertThrows(()=>{
     new ZedInOutParams(tokens)
   });
 });
 
 Deno.test("ZedInput->valid", ()=>{
-  const tokens = lex(`IN[]`);
+  const tokens = new TokenArray(lex(`IN[]`));
   const result = new ZedInput(tokens);
   assertEquals(
     result.promptParams,
@@ -85,14 +86,14 @@ Deno.test("ZedInput->valid", ()=>{
 });
 
 Deno.test("ZedInput->invalid", ()=>{
-  const tokens = lex(`INPUT[]`);
+  const tokens = new TokenArray(lex(`INPUT[]`));
   assertThrows(()=>{
     new ZedInput(tokens);
   });
 });
 
 Deno.test("ZedAssignment->variable", ()=>{
-  const tokens = lex(`= A1 Z80`);
+  const tokens = new TokenArray(lex(`= A1 Z80`));
   const result = new ZedAssignment(tokens);
   assertEquals(
     result,
@@ -105,7 +106,7 @@ Deno.test("ZedAssignment->variable", ()=>{
 });
 
 Deno.test("ZedAssignment->string", ()=>{
-  const tokens = lex(`= A1 "Hello"`);
+  const tokens = new TokenArray(lex(`= A1 "Hello"`));
   const result = new ZedAssignment(tokens);
   assertEquals(
     result,
@@ -118,7 +119,7 @@ Deno.test("ZedAssignment->string", ()=>{
 });
 
 Deno.test("ZedAssignment->number", ()=>{
-  const tokens = lex(`= A1 42`);
+  const tokens = new TokenArray(lex(`= A1 42`));
   const result = new ZedAssignment(tokens);
   assertEquals(
     result,
@@ -131,7 +132,7 @@ Deno.test("ZedAssignment->number", ()=>{
 });
 
 Deno.test("ZedAssignment->operator", ()=>{
-  const tokens = lex(`= A1 42 +`);
+  const tokens = new TokenArray(lex(`= A1 42 +`));
   const result = new ZedAssignment(tokens);
   assertEquals(
     result,
@@ -144,7 +145,7 @@ Deno.test("ZedAssignment->operator", ()=>{
 });
 
 Deno.test("ZedAssignment->input", ()=>{
-  const tokens = lex(`= A1 IN[]`);
+  const tokens = new TokenArray(lex(`= A1 IN[]`));
   const result = new ZedAssignment(tokens);
   assertEquals(
     result,
@@ -158,12 +159,12 @@ Deno.test("ZedAssignment->input", ()=>{
 
 // treated as the next token; in other words, ignored.
 Deno.test("ZedAssignment->invalidOperator", ()=>{
-  const tokens = lex(`= A1 Z80 %`);
+  const tokens = new TokenArray(lex(`= A1 Z80 %`));
   new ZedAssignment(tokens);
 });
 
 Deno.test("ZedOutput->multiple", ()=>{
-  const tokens = lex(`OUT[Z80+"Hello"+42]`);
+  const tokens = new TokenArray(lex(`OUT[Z80+"Hello"+42]`));
   const result = new ZedOutput(tokens);
   assertEquals(
     result.promptParams,
@@ -176,7 +177,7 @@ Deno.test("ZedOutput->multiple", ()=>{
 });
 
 Deno.test("ZedCondition->equality", ()=>{
-  const tokens = lex(`== 11 22`);
+  const tokens = new TokenArray(lex(`== 11 22`));
   const result = new ZedCondition(tokens);
   assertEquals(
     result,
@@ -190,7 +191,7 @@ Deno.test("ZedCondition->equality", ()=>{
 });
 
 Deno.test("ZedCondition->invertEquality", ()=>{
-  const tokens = lex(`!== 11 22`);
+  const tokens = new TokenArray(lex(`!== 11 22`));
   const result = new ZedCondition(tokens);
   assertEquals(
     result,
@@ -204,7 +205,7 @@ Deno.test("ZedCondition->invertEquality", ()=>{
 });
 
 Deno.test("ZedCondition->logical", ()=>{
-  const tokens = lex(`&& ! <= 11 11 >= 22 22`);
+  const tokens = new TokenArray(lex(`&& ! <= 11 11 >= 22 22`));
   const result = new ZedCondition(tokens);
   assertEquals(
     result,

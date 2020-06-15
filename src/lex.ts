@@ -17,7 +17,7 @@ export interface Token {
   position: number;
 }
 
-function generateToken(m: RegExpMatchArray): Token {
+function tokenFromMatch(m: RegExpMatchArray): Token {
   // retrieve the entry in m.groups which is not undefined, this is the right token type and holds the desired value
   const [ tokType, tokValue ] = Object.entries(m.groups??{}).filter(v=>v[1]!==undefined)[0];
   return {
@@ -28,13 +28,14 @@ function generateToken(m: RegExpMatchArray): Token {
   };
 }
 
+/** Perform lexical analysis on source code, returning a list of tokens. */
 export function lex(source: string): Token[] {
   const lines = source.split(newline);
   const tokenList: Token[] = [];
   for (let i = 0; i < lines.length; i++) {
     const tokenMatches = lines[i].matchAll(zedToken);
     for (let match of tokenMatches) {
-      const token = generateToken(match);
+      const token = tokenFromMatch(match);
       token.line = i;
       tokenList.push(token);
     }

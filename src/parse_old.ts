@@ -29,7 +29,7 @@ const zedDictionary = {
     "ENDFOR",
     "ENDSWITCH"
   ],
-  endOfStatementTest: {type: ["operator"], value: [":"]} as TokenTest
+  endOfStatementTest: {type: "operator", value: ":"} as TokenTestOptions
 } as const;
 
 type Keys<T> = keyof T;
@@ -40,148 +40,86 @@ type RelationalOperator = Values<typeof zedDictionary.relationalOperator>;
 type DataType = "string" | "integer" | "float" | "unknown";
 type EndOfScope = typeof zedDictionary.endOfScope[number];
 
-interface TokenTest {
-  type?: readonly Token["type"][];
-  value?: readonly string[];
+interface TokenTestOptions {
+  type?: Token["type"] | readonly Token["type"][];
+  value?: string | readonly string[];
 }
-interface ParserTest {
-  test: TokenTest;
-  errorMsg: (t: Token)=>string;
-}
-const parserTests = {
-  expectedVariable: {
-    test: {type:["variable"]},
-    errorMsg: t=>`Expected variable at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedValue: {
-    test: {type:["string","number"]},
-    errorMsg: t=>`Expected value at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedVariableOrValue: {
-    test: {type:["variable","string","number"]},
-    errorMsg: t=>`Expected variable or value at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedParameterOpen: {
-    test: {type: ["operator"], value: ["["]},
-    errorMsg: t=>`Expected '[' at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedParameterClose: {
-    test: {type: ["operator"], value: ["]"]},
-    errorMsg: t=>`Expected ']' at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedParameterSeparator: {
-    test: {type: ["operator"], value: ["+"]},
-    errorMsg: t=>`Expected '+' at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedOperatorCondition: {
-    test: {
-      type: ["operator"],
-      value: [
-        ...Object.keys(zedDictionary.logicalOperator),
-        ...Object.keys(zedDictionary.relationalOperator),
-        "!"
-      ]
-    },
-    errorMsg: t=>`Expected conditional operator at line ${t.line} char ${t.position}.`
-  } as ParserTest,
-  
-  internalKeywordIN: {
-    test: {type: ["keyword"], value: ["IN"]},
-    errorMsg: t=>`1`,
-  } as ParserTest,
-  internalKeywordOUT: {
-    test: {type: ["keyword"], value: ["OUT"]},
-    errorMsg: t=>`2`,
-  } as ParserTest,
-  internalSequenceAssign: {
-    test: {type: ["operator"], value: ["="]},
-    errorMsg: t=>`3`
-  } as ParserTest,
-  internalOperatorMathematical: {
-    test: {type: ["operator"], value: Object.keys(zedDictionary.mathematicalOperator)},
-    errorMsg: t=>`4`
-  } as ParserTest,
-  internalOperatorLogical: {
-    test: {type: ["operator"], value: Object.keys(zedDictionary.logicalOperator)},
-    errorMsg: t=>`5`
-  } as ParserTest,
-  internalOperatorRelational: {
-    test: {type: ["operator"], value: Object.keys(zedDictionary.relationalOperator)},
-    errorMsg: t=>`6`
-  } as ParserTest,
-  internalOperatorInvert: {
-    test: {type: ["operator"], value: ["!"]},
-    errorMsg: t=>`7`,
-  } as ParserTest,
-  
-} as const;
-type ParserTestKey = keyof typeof parserTests;
 
-function testToken(t: Token | undefined, o: TokenTest = {}): boolean {
+function testToken(t?: Token, o: TokenTestOptions = {}): boolean {
   let valid = true;
   if (t === undefined)
     valid = false;
-  else if (o.type !== undefined && !o.type.includes(t.type))
-    valid = false;
-  else if (o.value !== undefined && !o.value.includes(t.value))
-    valid = false;
+  else {
+    if (o.type !== undefined && typeof o.type === "string" && t?.type !== o.type)
+      valid = false;
+    else if (o.type !== undefined && typeof o.type !== "string" && !o.type.includes(t!.type))
+      valid = false;
+    if (o.value !== undefined && typeof o.value === "string" && t!.value !== o.value)
+      valid = false;
+    else if (o.value !== undefined && typeof o.value !== "string" && !o.value.includes(t!.value))
+      valid = false;
+  }
   return valid;
 }
 
-export class ParserError extends Error {
-  constructor(public key: ParserTestKey, tok: Token) {
-    super(parserTests[key].errorMsg(tok));
+/** This error should never naturally occur, and instead represents an error in the parser itself */
+class IncorrectTokenError extends Error {
+  constructor(t: Token){
+    super(`Incorrect '${t.value}' at line ${t.line+1}, char ${t.position+1}.`);
   }
 }
-export class UnexpectedEndOfProgram extends Error {}
+class UnexpectedTokenError extends Error {
+  constructor(t: Token){
+    super(`Unexpected '${t.value}' at line ${t.line+1}, char ${t.position+1}.`);
+  }
+}
+class EndOfTokensError extends Error {
+  constructor(){
+    super("Reached end of program too soon.");
+  }
+}
+class MissingTokenError extends Error {
+  constructor(expected: string, line: number, position: number){
+    super(`Missing token '${expected}' at line ${line+1}, char ${position+1}.`);
+  }
+}
+class UndefinedVariableError extends Error {
+  constructor(t: Token, v: ZedVariable) {
+    super(`Undefined variable ${v.identifier} at line ${t.line+1}, char ${t.position+1}`);
+  }
+}
+// TODO->Add message param to constructor.
+class SyntaxError extends Error {
+  constructor(structureName: string, atToken: Token) {
+    super(`Invalid or missing '${structureName}' at line ${atToken.line+1}, char ${atToken.position+1}`);
+  }
+}
 
-export class TokenArray {
-  #data: (Token|undefined)[];
-  #index: number = 0;
-  constructor(init: Token[]){this.#data = init;}
-  advance(){this.#index++;}
-  peek(){ return this.#data[this.#index]; }
-  assertPeek(){
-    const tok = this.peek();
-    if (tok === undefined)
-      throw new UnexpectedEndOfProgram();
-    else
-      return tok as Token;
-  }
-  read(testKey: ParserTestKey): Token {
-    const nextToken = this.peek();
-    if (nextToken === undefined)
-      throw new UnexpectedEndOfProgram();
-    else if (!testToken(nextToken, parserTests[testKey].test))
-      throw new ParserError(testKey, nextToken);
-    else {
-      this.advance();
-      return nextToken;
-    }
-  }
-  test(testKey: ParserTestKey): boolean {
-    return testToken(this.peek(), parserTests[testKey].test);
-  }
-  readVariable(): ZedVariable {
-    const varToken = this.read("expectedVariable");
-    return new ZedVariable(varToken.value);
-  }
-  readValue(): ZedString | ZedNumber {
-    const valToken = this.read("expectedValue");
-    if (valToken.type === "string")
-      return new ZedString(valToken.value);
-    else 
-      return new ZedNumber(Number(valToken.value));
-  }
-  readVariableOrValue(): ZedVariable | ZedString | ZedNumber {
-    const tok = this.read("expectedVariableOrValue");
-    if (tok.type === "variable")
-      return new ZedVariable(tok.value);
-    else if (tok.type === "string")
-      return new ZedString(tok.value);
-    else
-      return new ZedNumber(Number(tok.value));
-  }
+/** Advances the token list. Typically called after a peek is handled. */
+function advanceTokens(t: Token[]): void {
+  t.shift();
+}
+
+/** Asserts the next token exists, and returns it. */
+function peekNextToken(t: Token[]): Token {
+  const tok = t[0];
+  if (tok === undefined) throw new EndOfTokensError();
+  return tok;
+}
+
+/** Pops the next token, asserts that it exists, and returns it. */
+function readNextToken(t: Token[]): Token {
+  const tok = t.shift();
+  if (tok === undefined) throw new EndOfTokensError();
+  return tok;
+}
+
+/** Pops the next token, asserts that it exists and that it passes the test, and returns it */
+function assertNextToken(t: Token[], o: TokenTestOptions = {}): Token {
+  const tok = readNextToken(t);
+  if (!testToken(tok, o))
+    throw new IncorrectTokenError(tok);
+  return tok;
 }
 
 export class ZedVariable { constructor(public identifier: string){} }
@@ -189,58 +127,94 @@ export class ZedString { constructor(public content: string){} }
 export class ZedNumber { constructor(public value: number){} }
 
 export class ZedInOutParams extends Array<ZedVariable | ZedString | ZedNumber> {
-  constructor (t: TokenArray) {
+  constructor (t: Token[]) {
     super();
-    t.read("expectedParameterOpen");
+    // test '['
+    const openBracketToken = peekNextToken(t);
+    if (!testToken(openBracketToken, {type: "operator", value: "["}))
+      throw new SyntaxError("parameter list opening [", openBracketToken);
+    advanceTokens(t);
     // test for '+' separated parameters
     while (true) {
-      // if the next token is ']' then break the loop
-      if (t.test("expectedParameterClose"))
+      if (testToken(peekNextToken(t), {type: "operator", value: "]"}))
         break;
-      const param = t.readVariableOrValue();
-      this.push(param);
-      // if the next character is not ']'
-      // then assert there is a '+' separator
-      if (!t.test("expectedParameterClose"))
-        t.read("expectedParameterSeparator");
+      const paramToken = peekNextToken(t);
+      if (paramToken.type === "variable")
+        this.push(new ZedVariable(paramToken.value));
+      else if (paramToken.type === "string")
+        this.push(new ZedString(paramToken.value));
+      else if (paramToken.type === "number")
+        this.push(new ZedNumber(Number(paramToken.value)));
+      else
+        throw new SyntaxError("variable/string/number parameter", paramToken);
+      advanceTokens(t);
+      if (!testToken(peekNextToken(t), {type: "operator", value: "]"})) {
+        const separatorToken = readNextToken(t);
+        if (!testToken(separatorToken, {type: "operator", value: "+"}))
+          throw new SyntaxError("paramter list separator", separatorToken);
+      }
     }
-    t.read("expectedParameterClose");
+    // test for ']'
+    const closeBracketToken = peekNextToken(t);
+    if (!testToken(closeBracketToken, {type: "operator", value: "]"}))
+      throw new SyntaxError("parameter list closing ]", closeBracketToken);
+    advanceTokens(t);
   }
 }
 
 export class ZedInput {
   promptParams: ZedInOutParams;
-  constructor(t: TokenArray) {
-    t.read("internalKeywordIN");
+  constructor(t: Token[]) {
+    assertNextToken(t, ZedInput.tokenTest);
     this.promptParams = new ZedInOutParams(t);
   }
+  static tokenTest: TokenTestOptions = {type: "keyword", value: "IN"};
 }
 
 export class ZedAssignment {
   target: ZedVariable;
-  operand: ZedVariable | ZedString | ZedNumber | ZedInput;
+  operand: ZedVariable | ZedString | ZedNumber | ZedInput | null = null;
   operator: MathematicalOperator | null = null;
-  constructor(t: TokenArray) {
-    t.read("internalSequenceAssign");
-    // get target variable
-    this.target = t.readVariable();
-    // get operand
-    if (t.test("internalKeywordIN"))
+  constructor(t: Token[]) {
+    // TODO->Create a function that accepts all classes with beginsWith() method and assert using that
+    assertNextToken(t, ZedAssignment.tokenTest);
+    // get target variable token
+    const targetToken = peekNextToken(t);
+    if (!testToken(targetToken, {type: "variable"}))
+      throw new SyntaxError("assignment", targetToken);
+    advanceTokens(t);
+    // get value token
+    const operandToken = peekNextToken(t);
+    if (testToken(operandToken, {type: "variable"}))
+      this.operand = new ZedVariable(readNextToken(t).value);
+    else if (testToken(operandToken, {type: "string"}))
+      this.operand = new ZedString(readNextToken(t).value);
+    else if (testToken(operandToken, {type: "number"}))
+      this.operand = new ZedNumber(Number(readNextToken(t).value));
+    else if (testToken(operandToken, ZedInput.tokenTest))
       this.operand = new ZedInput(t);
     else
-      this.operand = t.readVariableOrValue();
-    // get optional operator
-    if (t.test("internalOperatorMathematical"))
-      this.operator = (zedDictionary.mathematicalOperator as any)[t.read("internalOperatorMathematical").value];
+      throw new SyntaxError("assignment", operandToken);
+
+    // get optional operator token
+    let operatorToken: Token | null = null;
+    if (testToken(t[0], {type: "operator", value: Object.keys(zedDictionary.mathematicalOperator)}))
+      operatorToken = readNextToken(t);
+
+    this.target = new ZedVariable(targetToken.value);
+    if (operatorToken !== null)
+      this.operator = zedDictionary.mathematicalOperator[operatorToken.value as Keys<typeof zedDictionary.mathematicalOperator>];
   }
+  static tokenTest: TokenTestOptions = {type: "operator", value: "="};
 }
 
 export class ZedOutput {
   promptParams: ZedInOutParams;
-  constructor(t: TokenArray) {
-    t.read("internalKeywordOUT");
+  constructor(t: Token[]) {
+    assertNextToken(t, ZedOutput.tokenTest);
     this.promptParams = new ZedInOutParams(t);
   }
+  static tokenTest: TokenTestOptions = {type: "keyword", value: "OUT"};
 }
 
 export class ZedCondition {
@@ -248,32 +222,53 @@ export class ZedCondition {
   left: ZedCondition | ZedVariable | ZedString | ZedNumber;
   right: ZedCondition | ZedVariable | ZedString | ZedNumber;
   invert: boolean = false;
-  constructor(t: TokenArray) {
-    // test for an invert operator
-    if (t.test("internalOperatorInvert")) {
-      t.read("internalOperatorInvert");
+  constructor(t: Token[]) {
+    const invertToken = peekNextToken(t);
+    if (testToken(invertToken, {type: "operator", value: "!"})) {
       this.invert = true;
+      advanceTokens(t);
     }
-    // enfore that there is a conditional operator
-    if (t.test("internalOperatorLogical"))
-      this.operator = (zedDictionary.logicalOperator as any)[t.read("internalOperatorLogical").value];
-    else if (t.test("internalOperatorRelational"))
-      this.operator = (zedDictionary.relationalOperator as any)[t.read("internalOperatorRelational").value];
+
+    const operatorToken = peekNextToken(t);
+    if (testToken(operatorToken, {type: "operator", value: Object.keys(zedDictionary.logicalOperator)}))
+      this.operator = zedDictionary.logicalOperator[operatorToken.value as Keys<typeof zedDictionary.logicalOperator>];
+    else if (testToken(operatorToken, {type: "operator", value: Object.keys(zedDictionary.relationalOperator)}))
+      this.operator = zedDictionary.relationalOperator[operatorToken.value as Keys<typeof zedDictionary.relationalOperator>];
     else
-      throw new ParserError("expectedOperatorCondition", t.assertPeek());
-    // parse left hand side
-    if (t.test("expectedOperatorCondition"))
+      throw new SyntaxError("condition operator", operatorToken);
+    advanceTokens(t);
+    
+    const leftTermToken = peekNextToken(t);
+    if (testToken(leftTermToken, ZedCondition.tokenTest)) 
       this.left = new ZedCondition(t);
+    else if (testToken(leftTermToken, {type: "variable"}))
+      this.left = new ZedVariable(readNextToken(t).value);
+    else if (testToken(leftTermToken, {type: "string"}))
+      this.left = new ZedString(readNextToken(t).value);
+    else if (testToken(leftTermToken, {type: "number"}))
+      this.left = new ZedNumber(Number(readNextToken(t).value));
     else
-      this.left = t.readVariableOrValue();
-    // parse right hand side
-    if (t.test("expectedOperatorCondition"))
+      throw new SyntaxError("condition left-term", leftTermToken);
+    
+    const rightTermToken = peekNextToken(t);
+    if (testToken(rightTermToken, ZedCondition.tokenTest)) 
       this.right = new ZedCondition(t);
+    else if (testToken(rightTermToken, {type: "variable"}))
+      this.right = new ZedVariable(readNextToken(t).value);
+    else if (testToken(rightTermToken, {type: "string"}))
+      this.right = new ZedString(readNextToken(t).value);
+    else if (testToken(rightTermToken, {type: "number"}))
+      this.right = new ZedNumber(Number(readNextToken(t).value));
     else
-      this.right = t.readVariableOrValue();
+      throw new SyntaxError("condition right-term", rightTermToken);
   }
+  static tokenTest: TokenTestOptions = {type: "operator", value: [
+    ...Object.keys(zedDictionary.logicalOperator),
+    ...Object.keys(zedDictionary.relationalOperator),
+    "!"
+  ]}
 }
-/*
+
 class ZedStatement {
   structure: ZedAssignment | ZedOutput;
   endOfStatementSatisfied: boolean = true;
