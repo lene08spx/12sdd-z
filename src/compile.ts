@@ -21,7 +21,7 @@ import {
 
 const libZed = `
 # libzed
-# - division by zero will result in infinity
+# - division by zero will result in NaN
 import math
 
 def zedInput(prompt):
@@ -54,7 +54,7 @@ def zedAssign(target, value, operator):
    elif operator == '*':
     return target*int(value)
    elif operator == '/':
-    if value==0: return math.inf
+    if value==0: return math.nan
     else: return target[0:len(target)/value]
  # integer
  elif type(target) == int or type(target) == float:
@@ -66,7 +66,7 @@ def zedAssign(target, value, operator):
    elif operator == '*':
     return target * len(value)
    elif operator == '/':
-    if len(value)==0: return math.inf
+    if len(value)==0: return math.nan
     else: return target / len(value)
   elif type(value) == int or type(value) == float:
    if operator == '+':
@@ -76,7 +76,7 @@ def zedAssign(target, value, operator):
    elif operator == '*':
     return target * value
    elif operator == '/':
-    if value==0: return math.inf
+    if value==0: return math.nan
     else: return target / value
 
 `;
@@ -110,14 +110,6 @@ function compileBlock(code: ZedCodeBlock, indentLevel: number): string {
 
 function compileOutput(struct: ZedOutput, indentLevel: number): string {
   return indent(indentLevel)+`print(${struct.promptParams.items.join(',')},sep='')`;
-}
-
-function zedAssignOperandType(operand: ZedNumber | ZedString | ZedVariable | ZedInput) {
-  if (operand instanceof ZedNumber) return 'number';
-  else if (operand instanceof ZedString) return 'string';
-  else if (operand instanceof ZedVariable) return 'variable';
-  else if (operand instanceof ZedInput) return 'input';
-  throw null;
 }
 
 function compileAssignment(struct: ZedAssignment, indentLevel: number): string {

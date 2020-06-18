@@ -33,9 +33,9 @@ def zedAssign(target, value, operator):
    elif operator == '*':
     return target*int(value)
    elif operator == '/':
-    if value==0: return math.inf
+    if value==0: return math.nan
     else: return target[0:len(target)/value]
- # number
+ # integer
  elif type(target) == int or type(target) == float:
   if type(value) == str:
    if operator == '+':
