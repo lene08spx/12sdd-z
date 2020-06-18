@@ -1,162 +1,222 @@
 import { encode } from "./deps.ts";
 import { lex } from "./lex.ts";
-import { Syntax, parse } from "./parse.ts";
+import { TypeCheckInstance } from "./action.ts";
+import {
+  parse,
+  ZedProgram,
+  ZedCodeBlock,
+  ZedAssignment,
+  ZedBinarySelection,
+  ZedCondition,
+  ZedForLoop,
+  ZedInput,
+  ZedMultiwaySelection,
+  ZedNumber,
+  ZedOutput,
+  ZedPostTestLoop,
+  ZedPreTestLoop,
+  ZedString,
+  ZedVariable,
+} from "./parse.ts";
 
-class PythonTarget {
-  private indentLevel = 0;
-  public readonly buffer = new Deno.Buffer();
-  constructor(p: Syntax.Program) {
-    this.indentLevel = 0;
-    // special runtime functions for Zed-Language features.
-    this.buffer.writeSync(encode("def zedInput(prompt):\n _in=input(prompt)\n try:\n  return int(_in)\n except:\n  try:\n    return float(_in)\n  except:\n   return _in\n"));
-    this.buffer.writeSync(encode("def zedCast(var,val):\n if type(var) == int:\n  return int(val)\n elif type(var) == float:\n  return float(val)\n elif type(var) == str:\n  return str(val)\n raise 'OOPS'\n"));
-    // definition of function
-    this.buffer.writeSync(encode(`def ${p.name}():\n`));
-    this.indentLevel++;
-    // mainline
-    this.compileCodeLines(p.code);
-    this.indentLevel--;
-    // call the main function
-    this.buffer.writeSync(encode(`${p.name}()\n`));
-  }
-  private indent(s: string): Uint8Array {
-    return encode("".padStart(this.indentLevel, " ")+s);
-  }
-  private compileCodeLines(code: Syntax.Instruction[]): void {
-    if (code.length === 0) this.buffer.writeSync(this.indent("pass"));
-    for (let c of code) {
-      this.compileStructure(c);
-    }
-  }
-  private compileStructure(s: Syntax.Structure): void {
-    if (s instanceof Syntax.Input) this.compileInput(s);
-    if (s instanceof Syntax.Condition) this.compileCondition(s);
-    if (s instanceof Syntax.Assign) this.compileAssign(s);
-    if (s instanceof Syntax.Output) this.compileOutput(s);
-    if (s instanceof Syntax.PreTest) this.compilePreTest(s);
-    if (s instanceof Syntax.PostTest) this.compilePostTest(s);
-    if (s instanceof Syntax.CountLoop) this.compileCountLoop(s);
-    if (s instanceof Syntax.Select) this.compileSelect(s);
-    if (s instanceof Syntax.Switch) this.compileSwitch(s);
-  }
-  private compileCondition(s: Syntax.Condition): void {
-    s.operator = s.operator
-      .replace("&&", "and")
-      .replace("||", "or")
-      .replace("AND", "and")
-      .replace("OR", "or");
-    // invert and condition grouping open
-    this.buffer.writeSync(encode(`${s.invert?" not":""}(`));
-    // left condition
-    if (s.left instanceof Syntax.Condition) this.compileCondition(s.left);
-    else this.buffer.writeSync(encode(s.left.toString()));
-    // operator
-    this.buffer.writeSync(encode(s.operator));
-    // right condition
-    if (s.right instanceof Syntax.Condition) this.compileCondition(s.right);
-    else this.buffer.writeSync(encode(s.right.toString()));
-    // close condition
-    this.buffer.writeSync(encode(")"));
-  }
-  private compileInput(s: Syntax.Input): string {
-    return `zedInput(${s.prompt})`;
-  }
-  private compilePreTest(s: Syntax.PreTest): void {
-    this.buffer.writeSync(this.indent(`while`));
-    this.compileCondition(s.condition);
-    this.buffer.writeSync(encode(`:\n`));
-    this.indentLevel++;
-    this.compileCodeLines(s.code);
-    this.indentLevel--;
-  }
-  private compilePostTest(s: Syntax.PostTest): void {
-    this.buffer.writeSync(this.indent(`while True:\n`));
-    this.indentLevel++;
-    this.compileCodeLines(s.code);
-    this.buffer.writeSync(this.indent(`if`));
-    this.compileCondition(s.condition);
-    this.buffer.writeSync(encode(`:break\n`));
-    this.indentLevel--;
-  }
-  private compileCountLoop(s: Syntax.CountLoop): void {
-    this.buffer.writeSync(this.indent(`for ${s.variable} in range(${s.from},${s.to},${s.by}):\n`));
-    this.indentLevel++;
-    this.compileCodeLines(s.code);
-    this.indentLevel--;
-  }
-  private compileSelect(s: Syntax.Select): void {
-    this.buffer.writeSync(this.indent(`if`));
-    this.compileCondition(s.condition);
-    this.buffer.writeSync(encode(`:\n`));
-    this.indentLevel++;
-    this.compileCodeLines(s.trueCode);
-    this.indentLevel--;
-    if (s.falseCode !== undefined && s.falseCode.length > 0 ) {
-      this.buffer.writeSync(this.indent(`else:\n`));
-      this.indentLevel++;
-      this.compileCodeLines(s.falseCode);
-      this.indentLevel--;
-    }
-  }
-  private compileSwitch(s: Syntax.Switch): void {
-    for (let valCode of s.whenValueThenCode) {
-      this.buffer.writeSync(this.indent(`if ${s.variable}==${valCode[0]}:\n`));
-      this.indentLevel++;
-      this.compileCodeLines(valCode[1]);
-      this.indentLevel--;
-    }
-  }
-  private compileAssign(s: Syntax.Assign): void {
-    let value = "";
-    if (s.value instanceof Syntax.ZedVariable) value = s.value as string;
-    else if (s.value instanceof Syntax.Input) value = this.compileInput(s.value);
-    else value = String(s.value);
-    if (s.operator !== undefined) {
-      this.buffer.writeSync(this.indent(`${s.variable}${s.operator?s.operator:""}=zedCast(${s.variable},${value})\n`));
-    } else {
-      this.buffer.writeSync(this.indent(`${s.variable}=${value}\n`));
-    }
-  }
-  private compileOutput(s: Syntax.Output): void {
-    this.buffer.writeSync(this.indent("print("));
-    for (let val of s.values) {
-      this.buffer.writeSync(encode(`${val},`));
-    }
-    this.buffer.writeSync(encode("sep='')\n"));
-  }
+const libZed = `
+# libzed
+# - division by zero will result in infinity
+import math
+
+def zedInput(prompt):
+ _in=input(prompt)
+ try:
+  return int(_in)
+ except:
+  try:
+   return float(_in)
+  except:
+   return _in
+
+def zedAssign(target, value, operator):
+ # string
+ if type(target) == str:
+  if type(value) == str:
+   if operator == '+':
+    return target+value
+   elif operator == '-':
+    return target.replace(value,'')
+   elif operator == '*':
+    return value.join(list(target))
+   elif operator == '/':
+    return target.replace(value,'',1)
+  elif type(value) == int or type(value) == float:
+   if operator == '+':
+    return target+(" "*int(value))
+   elif operator == '-':
+    return target[0:-int(value)]
+   elif operator == '*':
+    return target*int(value)
+   elif operator == '/':
+    if value==0: return math.inf
+    else: return target[0:len(target)/value]
+ # integer
+ elif type(target) == int or type(target) == float:
+  if type(value) == str:
+   if operator == '+':
+    return target + len(value)
+   elif operator == '-':
+    return target - len(value)
+   elif operator == '*':
+    return target * len(value)
+   elif operator == '/':
+    if len(value)==0: return math.inf
+    else: return target / len(value)
+  elif type(value) == int or type(value) == float:
+   if operator == '+':
+    return target + value
+   elif operator == '-':
+    return target - value
+   elif operator == '*':
+    return target * value
+   elif operator == '/':
+    if value==0: return math.inf
+    else: return target / value
+
+`;
+
+function indent(n: number): string {
+  return ' '.repeat(n);
 }
 
-const compileTargets = {
-  "python3": PythonTarget
-};
+function compileBlock(code: ZedCodeBlock, indentLevel: number): string {
+  if (code.statements.length < 1) return indent(indentLevel)+"pass\n";
+  let out = "";
+  for (let line of code.statements) {
+    if (line instanceof ZedOutput)
+      out += compileOutput(line, indentLevel+1);
+    else if (line instanceof ZedAssignment)
+      out += compileAssignment(line, indentLevel+1);
+    else if (line instanceof ZedPreTestLoop)
+      out += compilePreTest(line, indentLevel+1);
+    else if (line instanceof ZedPostTestLoop)
+      out += compilePostTest(line, indentLevel+1);
+    else if (line instanceof ZedForLoop)
+      out += compileForLoop(line, indentLevel+1);
+    else if (line instanceof ZedBinarySelection)
+      out += compileBinarySelection(line, indentLevel+1);
+    else if (line instanceof ZedMultiwaySelection)
+      out += compileMultiwaySelection(line, indentLevel+1);
+    out += "\n";
+  }
+  return out;
+}
 
-//returns number of bytes written
-export function compile(p: Syntax.Program, target: keyof typeof compileTargets = "python3"): Deno.Buffer {
-  return new compileTargets[target](p).buffer;
+function compileOutput(struct: ZedOutput, indentLevel: number): string {
+  return indent(indentLevel)+`print(${struct.promptParams.items.join(',')},sep='')`;
+}
+
+function zedAssignOperandType(operand: ZedNumber | ZedString | ZedVariable | ZedInput) {
+  if (operand instanceof ZedNumber) return 'number';
+  else if (operand instanceof ZedString) return 'string';
+  else if (operand instanceof ZedVariable) return 'variable';
+  else if (operand instanceof ZedInput) return 'input';
+  throw null;
+}
+
+function compileAssignment(struct: ZedAssignment, indentLevel: number): string {
+  let assignValue;
+  if (struct.operand instanceof ZedInput)
+    assignValue = 'zedInput('+struct.operand.promptParams.items.map(v=>`str(${v})`).join('+')+')';
+  else
+    assignValue = struct.operand.toString();
+  let out: string = indent(indentLevel);
+  if (struct.operator !== null)
+    out += `${struct.target} = zedAssign(${struct.target},${assignValue},'${struct.operator}')`;
+  else
+    out += `${struct.target} = ${assignValue}`;
+  return out;
+}
+
+function compileCondition(struct: ZedCondition): string {
+  let out = "";
+  let operator = struct.operator.replace("&&","and").replace("||","or");
+  out += (struct.invert ? "not" : "") + "(";
+  if (struct.left instanceof ZedCondition)
+    out += compileCondition(struct.left);
+  else
+    out += struct.left.toString();
+  out += " "+operator+" ";
+  if (struct.right instanceof ZedCondition)
+    out += compileCondition(struct.right);
+  else
+    out += struct.right.toString();
+  out += ")";
+  return out;
+}
+
+function compilePreTest(struct: ZedPreTestLoop, indentLevel: number): string {
+  return indent(indentLevel)+`while ${compileCondition(struct.condition)}:\n${compileBlock(struct.code, indentLevel+1)}`;
+}
+
+function compilePostTest(struct: ZedPostTestLoop, indentLevel: number): string {
+  return indent(indentLevel)+`while True:\n${compileBlock(struct.code, indentLevel+1)}if ${compileCondition(struct.condition)}:break`;
+}
+
+function compileForLoop(struct: ZedForLoop, indentLevel: number): string {
+  return indent(indentLevel)+`for ${struct.variable} in range(${struct.from},${struct.to}+1,${struct.by}):\n${compileBlock(struct.code, indentLevel+1)}`;
+}
+
+function compileBinarySelection(struct: ZedBinarySelection, indentLevel: number): string {
+  let out = indent(indentLevel)+`if ${compileCondition(struct.conditions[0][0]!)}:\n${compileBlock(struct.conditions[0][1], indentLevel+1)}`;
+  for (let i = 1; i < struct.conditions.length; i++) {
+    if (struct.conditions[i][0] !== null)
+      out += `else if ${compileCondition(struct.conditions[i][0]!)}:\n${compileBlock(struct.conditions[i][1], indentLevel+1)}`;
+    else 
+      out += `else:\n${compileBlock(struct.conditions[0][1], indentLevel+1)}`;
+  }
+  return out;
+}
+
+function compileMultiwaySelection(struct: ZedMultiwaySelection, indentLevel: number): string {
+  if (struct.whenValueThenCode.length < 0) return '';
+  let out = indent(indentLevel)+`if ${struct.variable} == ${struct.whenValueThenCode[0][0].toString()}:\n${compileBlock(struct.whenValueThenCode[0][1], indentLevel+1)}`;
+  for (let i = 1; i < struct.whenValueThenCode.length; i++)
+    out += `else if ${struct.variable} == ${struct.whenValueThenCode[i][0]}:\n${compileBlock(struct.whenValueThenCode[i][1], indentLevel+1)}`;
+  return out;
+}
+
+export function compile(p: ZedProgram): string {
+  if (p.code === null) return "None";
+  let indentLevel = 0;
+  let output = "";
+  output += libZed;
+  // create main function
+  output += `def ${p.identifier}():\n`;
+  output += compileBlock(p.code, indentLevel+1);
+  output += p.identifier+"()\n";
+  return output;
 }
 
 interface CompilationResult {
-  buffer: Deno.Buffer;
-  time: number;
+  success: boolean;
+  timeMs: number;
+  output: string;
+  errors: Error[];
 }
 
-// returns number of bytes written.
-export async function compileFile(filename: string): Promise<CompilationResult> {
-  const source = await Deno.open(filename);
+export function compileSource(sourceCode: string): CompilationResult {
+  const errors: Error[] = [];
+  let objCode: string = '';
   const startTime = performance.now();
-  const lexResult = await lex(source);
-  const parseResult = parse(lexResult);
-  if (parseResult.errors.length > 0) {
-    for (let e of parseResult.errors) {
-      console.log(e.name,"::",e.message);
-    }
-    Deno.exit(1);
+  const toks = lex(sourceCode);
+  const program = parse(toks);
+  errors.push(...program.errors);
+  if (program.code !== null) {
+    errors.push(...new TypeCheckInstance(program).errors);
+    if (errors.length < 1) objCode = compile(program);
   }
-  const compileBuffer = compile(parseResult.program, "python3");
   const endTime = performance.now();
-  Deno.close(source.rid);
   return {
-    buffer: compileBuffer,
-    time: Math.trunc(endTime-startTime)
+    success: errors.length < 1,
+    timeMs: endTime - startTime,
+    output: objCode,
+    errors: errors,
   };
 }

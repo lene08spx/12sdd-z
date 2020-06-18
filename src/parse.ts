@@ -1,226 +1,105 @@
-import { Token } from "./lex.ts";
+import { Token, TokenType } from "./lex.ts";
 
 // TODO->Assert minimum required tokens to help alleviate unexpected encountering of EndOfTokens Parser errors.
 
-const zedDictionary = {
-  mathematicalOperator: {
-    "+": "add",
-    "-": "sub",
-    "*": "mul",
-    "/": "div",
-  },
-  logicalOperator: {
-    "&&": "and",
-    "||": "or",
-  },
-  relationalOperator: {
-    ">=": "ge",
-    "<=": "le",
-    ">":  "gt",
-    "<":  "lt",
-    "==": "eq",
-  },
-  endOfScope: [
-    "ENDPROG",
-    "ENDIF",
-    "ENDDO",
-    "ENDWHEN",
-    "ENDREPEAT",
-    "ENDFOR",
-    "ENDSWITCH"
-  ],
-  endOfStatementTest: {type: ["operator"], value: [":"]} as TokenTest
-} as const;
+const mathematicalOperators = ["+","-","*","/"] as const;
+const logicalOperators = ["&&","||"] as const;
+const relationalOperators = [">=","<=",">","<","=="] as const;
 
-type Keys<T> = keyof T;
-type Values<T> = T[keyof T]
-type MathematicalOperator = Values<typeof zedDictionary.mathematicalOperator>;
-type LogicalOperator = Values<typeof zedDictionary.logicalOperator>;
-type RelationalOperator = Values<typeof zedDictionary.relationalOperator>;
-type DataType = "string" | "integer" | "float" | "unknown";
-type EndOfScope = typeof zedDictionary.endOfScope[number];
+export type MathematicalOperator = typeof mathematicalOperators[number];
+export type LogicalOperator = typeof logicalOperators[number];
+export type RelationalOperator = typeof relationalOperators[number];
 
-interface TokenTest {
-  type?: readonly Token["type"][];
-  value?: readonly string[];
-}
-interface ParserTest {
-  test: TokenTest;
-  errorMsg: (t: Token)=>string;
-}
-const parserTests = {
-  expectedNumber: {
-    test: {type:["number"]},
-    errorMsg: t=>`Expected number at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedVariable: {
-    test: {type:["variable"]},
-    errorMsg: t=>`Expected variable at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedValue: {
-    test: {type:["string","number"]},
-    errorMsg: t=>`Expected value at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedVariableOrValue: {
-    test: {type:["variable","string","number"]},
-    errorMsg: t=>`Expected variable or value at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedParameterOpen: {
-    test: {type: ["operator"], value: ["["]},
-    errorMsg: t=>`Expected '[' at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedParameterClose: {
-    test: {type: ["operator"], value: ["]"]},
-    errorMsg: t=>`Expected ']' at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedParameterSeparator: {
-    test: {type: ["operator"], value: ["+"]},
-    errorMsg: t=>`Expected '+' at line ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedOperatorCondition: {
-    test: {
-      type: ["operator"],
-      value: [
-        ...Object.keys(zedDictionary.logicalOperator),
-        ...Object.keys(zedDictionary.relationalOperator),
-        "!"
-      ]
-    },
-    errorMsg: t=>`Expected conditional operator at line ${t.line} char ${t.position}.`
-  } as ParserTest,
-  expectedKeywordDO: {
-    test: {type: ["keyword"], value: ["DO"]},
-    errorMsg: t=>`Expected keyword 'DO' at ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedKeywordENDWHEN: {
-    test: {type: ["keyword"], value: ["ENDWHEN"]},
-    errorMsg: t=>`Expected keyword 'ENDWHEN' at ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedKeywordENDFOR: {
-    test: {type: ["keyword"], value: ["ENDFOR"]},
-    errorMsg: t=>`8`,
-  } as ParserTest,
-  expectedKeywordENDREPEAT: {
-    test: {type: ["keyword"], value: ["ENDREPEAT"]},
-    errorMsg: t=>`8`,
-  } as ParserTest,
-  expectedKeywordUNTIL: {
-    test: {type: ["keyword"], value: ["UNTIL"]},
-    errorMsg: t=>`8`,
-  } as ParserTest,
-  expectedKeywordFROM: {
-    test: {type: ["keyword"], value: ["FROM"]},
-    errorMsg: t=>`Expected keyword 'FROM' at ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedKeywordTO: {
-    test: {type: ["keyword"], value: ["TO"]},
-    errorMsg: t=>`Expected keyword 'TO' at ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedKeywordBY: {
-    test: {type: ["keyword"], value: ["BY"]},
-    errorMsg: t=>`Expected keyword 'BY' at ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedKeywordOTHERWISE: {
-    test: {type: ["keyword"], value: ["OTHERWISE"]},
-    errorMsg: t=>`Expected keyword 'OTHERWISE' at ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedKeywordENDIF: {
-    test: {type: ["keyword"], value: ["ENDIF"]},
-    errorMsg: t=>`Expected keyword 'ENDIF' at ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedKeywordENDSWITCH: {
-    test: {type: ["keyword"], value: ["ENDSWITCH"]},
-    errorMsg: t=>`Expected keyword 'ENDSWITCH' at ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedEndOfStatement: {
-    test: {type: ["operator"], value: [":"]},
-    errorMsg: t=>`Expected end of statement ':' at ${t.line} char ${t.position}.`,
-  } as ParserTest,
-  expectedAssignOutputOrControl: {
-    test: {},
-    errorMsg: t=>`Expect an assignment, output or control structure at line ${t.line} char ${t.position}.`
-  } as ParserTest,
-  
-  internalKeywordIN: {
-    test: {type: ["keyword"], value: ["IN"]},
-    errorMsg: t=>`1`,
-  } as ParserTest,
-  internalKeywordOUT: {
-    test: {type: ["keyword"], value: ["OUT"]},
-    errorMsg: t=>`2`,
-  } as ParserTest,
-  internalKeywordWHEN: {
-    test: {type: ["keyword"], value: ["WHEN"]},
-    errorMsg: t=>`2`,
-  } as ParserTest,
-  internalKeywordIF: {
-    test: {type: ["keyword"], value: ["IF"]},
-    errorMsg: t=>`2`,
-  } as ParserTest,
-  internalKeywordSWITCH: {
-    test: {type: ["keyword"], value: ["SWITCH"]},
-    errorMsg: t=>`2`,
-  } as ParserTest,
-  internalKeywordFOR: {
-    test: {type: ["keyword"], value: ["FOR"]},
-    errorMsg: t=>`2`,
-  } as ParserTest,
-  internalKeywordREPEAT: {
-    test: {type: ["keyword"], value: ["REPEAT"]},
-    errorMsg: t=>`2`,
-  } as ParserTest,
-  internalKeywordENDDO: {
-    test: {type: ["keyword"], value: ["ENDDO"]},
-    errorMsg: t=>`8`,
-  } as ParserTest,
-  internalSequenceAssign: {
-    test: {type: ["operator"], value: ["="]},
-    errorMsg: t=>`3`
-  } as ParserTest,
-  internalOperatorMathematical: {
-    test: {type: ["operator"], value: Object.keys(zedDictionary.mathematicalOperator)},
-    errorMsg: t=>`4`
-  } as ParserTest,
-  internalOperatorLogical: {
-    test: {type: ["operator"], value: Object.keys(zedDictionary.logicalOperator)},
-    errorMsg: t=>`5`
-  } as ParserTest,
-  internalOperatorRelational: {
-    test: {type: ["operator"], value: Object.keys(zedDictionary.relationalOperator)},
-    errorMsg: t=>`6`
-  } as ParserTest,
-  internalOperatorInvert: {
-    test: {type: ["operator"], value: ["!"]},
-    errorMsg: t=>`7`,
-  } as ParserTest,
-  
-} as const;
-type ParserTestKey = keyof typeof parserTests;
+type ErrorMessageFormatter = (t: Token, tokenType: TokenType[], tokenValue: string[])=>string;
 
-function testToken(t: Token | undefined, o: TokenTest = {}): boolean {
-  let valid = true;
-  if (t === undefined)
-    valid = false;
-  else if (o.type !== undefined && !o.type.includes(t.type))
-    valid = false;
-  else if (o.value !== undefined && !o.value.includes(t.value))
-    valid = false;
-  return valid;
-}
-
-export class ParserError extends Error {
-  constructor(public key: ParserTestKey, tok: Token) {
-    super(parserTests[key].errorMsg(tok));
+class SyntaxTest {
+  constructor (
+    private errorMsgHandler: ErrorMessageFormatter,
+    private type: TokenType[] = [],
+    private value: string[] = [],
+  ) {}
+  check(t: Token | undefined): boolean {
+    let valid = true;
+    if (t === undefined)
+      valid = false;
+    else if (this.type.length > 0 && !this.type.includes(t.type))
+      valid = false;
+    else if (this.value.length > 0 && !this.value.includes(t.value))
+      valid = false;
+    return valid;
+  }
+  errorMsg(t: Token): string {
+    return this.errorMsgHandler(t, this.type, this.value);
   }
 }
-export class UnexpectedEndOfProgram extends Error {}
+
+const errorHandlers = {
+  expectedToken: function(t, tokenType, tokenValue) {
+    return `Expected ${tokenType.join(" or ")} '${tokenValue}' instead of '${t.value}' at line ${t.line} char ${t.position}.`;
+  } as ErrorMessageFormatter,
+  expectedProgramIdentifier: function(t, tokenType, tokenValue) {
+    return `Expected a program identifier instead of '${t.value}' at line ${t.line} char ${t.position}.`;
+  } as ErrorMessageFormatter
+} as const;
+
+export const syntaxTests = {
+  programIdentifier: new SyntaxTest(errorHandlers.expectedProgramIdentifier, ["identifier"]),
+  number: new SyntaxTest(errorHandlers.expectedToken, ["number"]),
+  variable: new SyntaxTest(errorHandlers.expectedToken, ["variable"]),
+  value: new SyntaxTest(errorHandlers.expectedToken, ["string", "number"]),
+  variableOrValue: new SyntaxTest(errorHandlers.expectedToken, ["variable","string","number"]),
+  parameterOpen: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["["]),
+  parameterClose: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["]"]),
+  parameterSeperator: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["+"]),
+  conditionalOperator: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["!", ...logicalOperators, ...relationalOperators]),
+  mathematicalOperator: new SyntaxTest(errorHandlers.expectedToken, ["operator"], [...mathematicalOperators]),
+  logicalOperator: new SyntaxTest(errorHandlers.expectedToken, ["operator"], [...logicalOperators]),
+  relationalOperator: new SyntaxTest(errorHandlers.expectedToken, ["operator"], [...relationalOperators]),
+  invert: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["!"]),
+  endOfStatement: new SyntaxTest(errorHandlers.expectedToken, ["operator"], [":"]),
+  statement: new SyntaxTest(errorHandlers.expectedToken, ["operator","keyword"], [
+    "=", "DO", "OUT", "IF", "SWITCH", "FOR", "WHEN", "REPEAT"
+  ]),
+  assign: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["="]),
+  PROG: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["PROG"]),
+  ENDPROG: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["ENDPROG"]),
+  DO: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["DO"]),
+  ENDDO: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["ENDDO"]),
+  OUT: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["OUT"]),
+  IN: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["IN"]),
+  IF: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["IF"]),
+  OTHERWISE: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["OTHERWISE"]),
+  ENDIF: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["ENDIF"]),
+  SWITCH: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["SWITCH"]),
+  ENDSWITCH: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["ENDSWITCH"]),
+  FOR: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["FOR"]),
+  FROM: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["FROM"]),
+  TO: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["TO"]),
+  BY: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["BY"]),
+  ENDFOR: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["ENDFOR"]),
+  WHEN: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["WHEN"]),
+  ENDWHEN: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["ENDWHEN"]),
+  REPEAT: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["REPEAT"]),
+  UNTIL: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["UNTIL"]),
+  ENDREPEAT: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["ENDREPEAT"]),
+} as const;
+
+export class ParserError extends Error {
+  constructor(test: SyntaxTest, public token: Token) {
+    super(test.errorMsg(token));
+  }
+}
+export class UnexpectedEndOfProgram extends Error {
+  currentErrors: ParserError[] = [];
+}
 
 export class TokenArray {
-  #data: (Token|undefined)[];
+  #data: Token[];
   #index: number = 0;
-  constructor(init: Token[]){this.#data = init;}
+  constructor(init: Token[], private testMode=false){this.#data = init;}
   advance(){this.#index++;}
   peek(){ return this.#data[this.#index]; }
+  currIndex(){ return this.#index; }
   assertPeek(){
     const tok = this.peek();
     if (tok === undefined)
@@ -228,35 +107,45 @@ export class TokenArray {
     else
       return tok as Token;
   }
-  read(testKey: ParserTestKey): Token {
+  read(test: SyntaxTest): Token {
     const nextToken = this.peek();
     if (nextToken === undefined)
       throw new UnexpectedEndOfProgram();
-    else if (!testToken(nextToken, parserTests[testKey].test))
-      throw new ParserError(testKey, nextToken);
+    else if (!test.check(nextToken))
+      throw new ParserError(test, nextToken);
     else {
       this.advance();
       return nextToken;
     }
   }
-  test(testKey: ParserTestKey): boolean {
-    return testToken(this.peek(), parserTests[testKey].test);
+  check(test: SyntaxTest): boolean {
+    return test.check(this.peek());
+  }
+  readNumber(): ZedNumber {
+    const varToken = this.read(syntaxTests.number);
+    return new ZedNumber(Number(varToken.value));
   }
   readVariable(): ZedVariable {
-    const varToken = this.read("expectedVariable");
-    return new ZedVariable(varToken.value);
+    const varToken = this.read(syntaxTests.variable);
+    if (this.testMode)
+      return new ZedVariable(varToken.value);
+    else
+      return new ZedVariable(varToken.value, this.currIndex()-1, varToken);
   }
   readValue(): ZedString | ZedNumber {
-    const valToken = this.read("expectedValue");
+    const valToken = this.read(syntaxTests.value);
     if (valToken.type === "string")
       return new ZedString(valToken.value);
     else 
       return new ZedNumber(Number(valToken.value));
   }
   readVariableOrValue(): ZedVariable | ZedString | ZedNumber {
-    const tok = this.read("expectedVariableOrValue");
+    const tok = this.read(syntaxTests.variableOrValue);
     if (tok.type === "variable")
-      return new ZedVariable(tok.value);
+      if (this.testMode)
+        return new ZedVariable(tok.value);
+      else
+        return new ZedVariable(tok.value, this.currIndex()-1, tok);
     else if (tok.type === "string")
       return new ZedString(tok.value);
     else
@@ -264,34 +153,43 @@ export class TokenArray {
   }
 }
 
-export class ZedVariable { constructor(public identifier: string){} }
-export class ZedString { constructor(public content: string){} }
-export class ZedNumber { constructor(public value: number){} }
+export class ZedVariable {
+  constructor(public identifier: string, public tokenIndex?: number, public token?: Token){}
+  toString(){return this.identifier}
+}
+export class ZedString {
+  constructor(public content: string){}
+  toString(){return this.content}
+}
+export class ZedNumber {
+  constructor(public value: number){}
+  toString(){return this.value.toString()}
+}
 
-export class ZedInOutParams extends Array<ZedVariable | ZedString | ZedNumber> {
+export class ZedInOutParams {
+  items: Array<ZedVariable | ZedString | ZedNumber> = [];
   constructor (t: TokenArray) {
-    super();
-    t.read("expectedParameterOpen");
+    t.read(syntaxTests.parameterOpen);
     // test for '+' separated parameters
     while (true) {
       // if the next token is ']' then break the loop
-      if (t.test("expectedParameterClose"))
+      if (t.check(syntaxTests.parameterClose))
         break;
       const param = t.readVariableOrValue();
-      this.push(param);
+      this.items.push(param);
       // if the next character is not ']'
       // then assert there is a '+' separator
-      if (!t.test("expectedParameterClose"))
-        t.read("expectedParameterSeparator");
+      if (!t.check(syntaxTests.parameterClose))
+        t.read(syntaxTests.parameterSeperator);
     }
-    t.read("expectedParameterClose");
+    t.read(syntaxTests.parameterClose);
   }
 }
 
 export class ZedInput {
   promptParams: ZedInOutParams;
   constructor(t: TokenArray) {
-    t.read("internalKeywordIN");
+    t.read(syntaxTests.IN);
     this.promptParams = new ZedInOutParams(t);
   }
 }
@@ -300,25 +198,29 @@ export class ZedAssignment {
   target: ZedVariable;
   operand: ZedVariable | ZedString | ZedNumber | ZedInput;
   operator: MathematicalOperator | null = null;
+  startTokenIndex: number;
+  endTokenIndex: number;
   constructor(t: TokenArray) {
-    t.read("internalSequenceAssign");
+    this.startTokenIndex = t.currIndex();
+    t.read(syntaxTests.assign);
     // get target variable
     this.target = t.readVariable();
     // get operand
-    if (t.test("internalKeywordIN"))
+    if (t.check(syntaxTests.IN))
       this.operand = new ZedInput(t);
     else
       this.operand = t.readVariableOrValue();
     // get optional operator
-    if (t.test("internalOperatorMathematical"))
-      this.operator = (zedDictionary.mathematicalOperator as any)[t.read("internalOperatorMathematical").value];
+    if (t.check(syntaxTests.mathematicalOperator))
+      this.operator = t.read(syntaxTests.mathematicalOperator).value as MathematicalOperator;
+    this.endTokenIndex = t.currIndex() - 1;
   }
 }
 
 export class ZedOutput {
   promptParams: ZedInOutParams;
   constructor(t: TokenArray) {
-    t.read("internalKeywordOUT");
+    t.read(syntaxTests.OUT);
     this.promptParams = new ZedInOutParams(t);
   }
 }
@@ -330,44 +232,44 @@ export class ZedCondition {
   invert: boolean = false;
   constructor(t: TokenArray) {
     // test for an invert operator
-    if (t.test("internalOperatorInvert")) {
-      t.read("internalOperatorInvert");
+    if (t.check(syntaxTests.invert)) {
+      t.read(syntaxTests.invert);
       this.invert = true;
     }
     // enfore that there is a conditional operator
-    if (t.test("internalOperatorLogical"))
-      this.operator = (zedDictionary.logicalOperator as any)[t.read("internalOperatorLogical").value];
-    else if (t.test("internalOperatorRelational"))
-      this.operator = (zedDictionary.relationalOperator as any)[t.read("internalOperatorRelational").value];
+    if (t.check(syntaxTests.logicalOperator))
+      this.operator = t.read(syntaxTests.logicalOperator).value as LogicalOperator;
+    else if (t.check(syntaxTests.relationalOperator))
+      this.operator = t.read(syntaxTests.relationalOperator).value as RelationalOperator;
     else
-      throw new ParserError("expectedOperatorCondition", t.assertPeek());
+      throw new ParserError(syntaxTests.conditionalOperator, t.assertPeek());
     // parse left hand side
-    if (t.test("expectedOperatorCondition"))
+    if (t.check(syntaxTests.conditionalOperator))
       this.left = new ZedCondition(t);
     else
       this.left = t.readVariableOrValue();
     // parse right hand side
-    if (t.test("expectedOperatorCondition"))
+    if (t.check(syntaxTests.conditionalOperator))
       this.right = new ZedCondition(t);
     else
       this.right = t.readVariableOrValue();
   }
 }
 
-// needs to carry errors instead of throwing them, except for unexpected end of file
-export class ZedDoBlock {
-  statements: (ZedAssignment | ZedOutput)[] = [];
-  errors: Error[] = [];
-  constructor(t: TokenArray) {
+export class ZedCodeBlock {
+  statements: (ZedOutput | ZedAssignment | ZedPreTestLoop | ZedPostTestLoop | ZedForLoop | ZedBinarySelection | ZedMultiwaySelection )[] = [];
+  errors: ParserError[] = [];
+  constructor(t: TokenArray, startBlockTest: SyntaxTest | null, endBlockTest: SyntaxTest) {
     let skipInput = false;
-    t.read("expectedKeywordDO");
+    if (startBlockTest !== null)
+      t.read(startBlockTest);
     while (true) {
       try {
-        if (t.test("internalKeywordENDDO"))
+        if (t.check(endBlockTest))
           break;
         // if there is just a end of statement by itself
-        else if (t.test("expectedEndOfStatement")) {
-          t.read("expectedEndOfStatement");
+        else if (t.check(syntaxTests.endOfStatement)) {
+          t.read(syntaxTests.endOfStatement);
           skipInput = false;
         }
         else if (skipInput) {
@@ -375,44 +277,81 @@ export class ZedDoBlock {
           t.advance();
         }
         // if OUT, make sure there is a :
-        else if (t.test("internalKeywordOUT")) {
+        else if (t.check(syntaxTests.OUT)) {
           this.statements.push(new ZedOutput(t));
-          if (!t.test("expectedEndOfStatement"))
-            this.errors.push(new ParserError("expectedEndOfStatement", t.assertPeek()));
+          if (!t.check(syntaxTests.endOfStatement))
+            this.errors.push(new ParserError(syntaxTests.endOfStatement, t.assertPeek()));
         }
         // if '=', make sure there is a :
-        else if (t.test("internalSequenceAssign")) {
+        else if (t.check(syntaxTests.assign)) {
           this.statements.push(new ZedAssignment(t));
-          if (!t.test("expectedEndOfStatement"))
-            this.errors.push(new ParserError("expectedEndOfStatement", t.assertPeek()));
+          if (!t.check(syntaxTests.endOfStatement))
+            this.errors.push(new ParserError(syntaxTests.endOfStatement, t.assertPeek()));
         }
+        else if (ZedPreTestLoop.check(t.peek())) {
+          const structure = new ZedPreTestLoop(t);
+          this.statements.push(structure);
+          this.errors.push(...structure.code.errors);
+        }
+        else if (ZedPostTestLoop.check(t.peek())) {
+          const structure = new ZedPostTestLoop(t);
+          this.statements.push(structure);
+          this.errors.push(...structure.code.errors);
+        }
+        else if (ZedForLoop.check(t.peek())) {
+          const structure = new ZedForLoop(t);
+          this.statements.push(structure);
+          this.errors.push(...structure.code.errors);
+        }
+        else if (ZedBinarySelection.check(t.peek())) {
+          const structure = new ZedBinarySelection(t);
+          this.statements.push(structure);
+          for (let [_, block] of structure.conditions)
+            this.errors.push(...block.errors);
+        }
+        else if (ZedMultiwaySelection.check(t.peek())) {
+          const structure = new ZedMultiwaySelection(t);
+          this.statements.push(structure);
+          for (let [_, block] of structure.whenValueThenCode)
+            this.errors.push(...block.errors);
+        }
+        // handle each special loop
         else {
           //error unexpected token;
           // set skip flag, until end of statement
-          this.errors.push(new ParserError("expectedAssignOutputOrControl", t.assertPeek()));
+          this.errors.push(new ParserError(syntaxTests.statement, t.assertPeek()));
           t.advance();
           skipInput = true;
         }
       } catch (e) {
         skipInput = true;
-        if (e instanceof UnexpectedEndOfProgram)
+        if (e instanceof UnexpectedEndOfProgram) {
+          e.currentErrors.unshift(...this.errors);
           throw e;
+        }
         else
           this.errors.push(e);
       }
     }
-    t.read("internalKeywordENDDO");
+    t.read(endBlockTest);
   }
+}
+
+export class ZedDoBlock extends ZedCodeBlock {
+  constructor(t: TokenArray) { super(t, syntaxTests.DO, syntaxTests.ENDDO) }
 }
 
 export class ZedPreTestLoop {
   condition: ZedCondition;
   code: ZedDoBlock;
   constructor(t: TokenArray) {
-    t.read("internalKeywordWHEN");
+    t.read(syntaxTests.WHEN);
     this.condition = new ZedCondition(t);
     this.code = new ZedDoBlock(t);
-    t.read("expectedKeywordENDWHEN");
+    t.read(syntaxTests.ENDWHEN);
+  }
+  static check(t: Token | undefined): boolean {
+    return syntaxTests.WHEN.check(t);
   }
 }
 
@@ -420,11 +359,14 @@ export class ZedPostTestLoop {
   condition: ZedCondition;
   code: ZedDoBlock;
   constructor(t: TokenArray) {
-    t.read("internalKeywordREPEAT");
+    t.read(syntaxTests.REPEAT);
     this.code = new ZedDoBlock(t);
-    t.read("expectedKeywordUNTIL");
+    t.read(syntaxTests.UNTIL);
     this.condition = new ZedCondition(t);
-    t.read("expectedKeywordENDREPEAT");
+    t.read(syntaxTests.ENDREPEAT);
+  }
+  static check(t: Token | undefined): boolean {
+    return syntaxTests.REPEAT.check(t);
   }
 }
 
@@ -435,31 +377,34 @@ export class ZedForLoop {
   by: ZedNumber;
   code: ZedDoBlock;
   constructor(t: TokenArray) {
-    t.read("internalKeywordFOR");
+    t.read(syntaxTests.FOR);
     this.variable = t.readVariable();
-    t.read("expectedKeywordFROM");
-    this.from = new ZedNumber(Number(t.read("expectedNumber").value));
-    t.read("expectedKeywordTO");
-    this.to = new ZedNumber(Number(t.read("expectedNumber").value));
-    t.read("expectedKeywordBY");
-    this.by = new ZedNumber(Number(t.read("expectedNumber").value));
+    t.read(syntaxTests.FROM);
+    this.from = t.readNumber();
+    t.read(syntaxTests.TO);
+    this.to = t.readNumber();
+    t.read(syntaxTests.BY);
+    this.by = t.readNumber();
     this.code = new ZedDoBlock(t);
-    t.read("expectedKeywordENDFOR");
+    t.read(syntaxTests.ENDFOR);
+  }
+  static check(t: Token | undefined): boolean {
+    return syntaxTests.FOR.check(t);
   }
 }
 
 export class ZedBinarySelection {
   conditions: [ZedCondition | null, ZedDoBlock][] = [];
   constructor(t: TokenArray) {
-    t.read("internalKeywordIF");
+    t.read(syntaxTests.IF);
     this.conditions.push([
       new ZedCondition(t),
       new ZedDoBlock(t)
     ]);
-    while (t.test("expectedKeywordOTHERWISE")) {
-      t.read("expectedKeywordOTHERWISE");
-      if (t.test("internalKeywordIF")) {
-        t.read("internalKeywordIF");
+    while (t.check(syntaxTests.OTHERWISE)) {
+      t.read(syntaxTests.OTHERWISE);
+      if (t.check(syntaxTests.IF)) {
+        t.read(syntaxTests.IF);
         this.conditions.push([
           new ZedCondition(t),
           new ZedDoBlock(t)
@@ -473,7 +418,10 @@ export class ZedBinarySelection {
         break;
       }
     }
-    t.read("expectedKeywordENDIF");
+    t.read(syntaxTests.ENDIF);
+  }
+  static check(t: Token | undefined): boolean {
+    return syntaxTests.IF.check(t);
   }
 }
 
@@ -481,72 +429,43 @@ export class ZedMultiwaySelection {
   variable: ZedVariable;
   whenValueThenCode: [(ZedNumber|ZedString),ZedDoBlock][] = [];
   constructor(t: TokenArray) {
-    t.read("internalKeywordSWITCH");
+    t.read(syntaxTests.SWITCH);
     this.variable = t.readVariable();
-    while (!t.test("expectedKeywordENDSWITCH")) {
-      t.read("internalKeywordWHEN");
+    while (!t.check(syntaxTests.ENDSWITCH)) {
+      t.read(syntaxTests.WHEN);
       this.whenValueThenCode.push([
         t.readValue(),
         new ZedDoBlock(t),
       ]);
     }
-    t.read("expectedKeywordENDSWITCH");
+    t.read(syntaxTests.ENDSWITCH);
+  }
+  static check(t: Token | undefined): boolean {
+    return syntaxTests.SWITCH.check(t);
   }
 }
 
-//   export class Program {
-//     name: string;
-//     code: CodeBlock;
-//     constructor(t: Token[], e: Error[]) {
-//       assertToken({token: t.shift(), type: "keyword", value: "PROG"});
-//       this.name = assertToken({token: t.shift(), type: "generic"}).value;
-//       this.code = new CodeBlock(t, e, "ENDPROG");
-//     }
-//   }
-//   export type Instruction = PreTest | PostTest | CountLoop | Select | Switch | Assign | Output;
-//   export type Structure = Instruction | Program | Condition | Input ;
-// }
+export class ZedProgram {
+  code: ZedCodeBlock | null;
+  errors: (ParserError|UnexpectedEndOfProgram)[];
+  identifier: string;
+  constructor(t: TokenArray) {
+    try {
+      t.read(syntaxTests.PROG);
+      this.identifier = t.read(syntaxTests.programIdentifier).value;
+      this.code = new ZedCodeBlock(t, null, syntaxTests.ENDPROG);
+      this.errors = this.code.errors;
+    } catch (e) {
+      this.code = null;
+      this.identifier = '';
+      if (e instanceof UnexpectedEndOfProgram)
+        this.errors = e.currentErrors;
+      else
+        this.errors = [e];
+    }
+  }
+}
 
-// namespace ParserErrors {
-//   export class UnexpectedToken extends Error {
-//     constructor(t: Token, message: string = ""){
-//       super(`Unexpected '${t.value}' on line ${t.line}.${message?" "+message+".":""}`);
-//     }
-//   }
-//   export class EndOfTokens extends Error {
-//     constructor(){
-//       super("Reached end of program too soon.");
-//     }
-//   }
-//   export class ExpectedToken extends Error {
-//     constructor(expected: string, line: number){
-//       super(`Expected '${expected}' near line ${line}.`);
-//     }
-//   }
-//   export class UnhandledToken extends Error {
-//     constructor(t: Token){
-//       super(`Unhandled '${t.value}' on line ${t.line}.`);
-//     }
-//   }
-// }
-
-
-// export function parse(t: Token[]) {
-//   const errors: Error[] = [];
-//   const program = new Syntax.Program(t, errors);
-//   return {
-//     program, errors
-//   };
-// }
-
-/*
-
-PROG counter
-  FOR I1 FROM 1 TO 10 BY 1
-    
-
-  
-
-ENDPROG
-
-*/
+export function parse(t: Token[]): ZedProgram {
+  return new ZedProgram(new TokenArray(t));
+}

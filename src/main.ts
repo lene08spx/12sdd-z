@@ -1,5 +1,5 @@
-import { compileFile } from "./compile.ts";
-import { IDE } from "./ide.ts";
+import { compileSource } from "./compile.ts";
+//import { IDE } from "./ide.ts";
 
 export const zedConfig = {
   name: "zed",
@@ -17,11 +17,11 @@ async function runPython(script: string) {
 }
 
 async function subCompile(srcFile: string) {
-  const outFilename = srcFile.replace(/\.z$/m, "") + ".py";
-  const result = await compileFile(srcFile);
-  console.log(`Compilation took ${result.time}ms.`);
-  await Deno.writeFile(outFilename, result.buffer.bytes());
-  return outFilename;
+  //const outFilename = srcFile.replace(/\.z$/m, "") + ".py";
+  //const result = await compileFile(srcFile);
+  //console.log(`Compilation took ${result.time}ms.`);
+  //await Deno.writeFile(outFilename, result.buffer.bytes());
+  //return outFilename;
 }
 
 function subHelp() {
@@ -40,26 +40,35 @@ if (import.meta.main) {
     Deno.args[0] === "run" &&
     Deno.args.length === 2
   ) {
-    const compileResult = await compileFile(Deno.args[1]);
+    //const compileResult = compile(await Deno.readTextFile(Deno.args[1]));
     //console.log(compileResult);
-    const str = new TextDecoder().decode(compileResult.buffer.bytes());
+    //const str = new TextDecoder().decode(compileResult.buffer.bytes());
     //console.log(str);
-    await runPython(str);
+    //await runPython(str);
   }
   // handle zed 'edit' subcommand
   else if (
     Deno.args[0] === "edit"
   ) {
-    const ide = new IDE();
-    ide.start();
-    ide.open();
+    //const ide = new IDE();
+    //ide.start();
+    //ide.open();
   }
   // handle zed 'compile' subcommand
   else if (
     Deno.args[0] === "compile" &&
     Deno.args.length === 2
   ) {
-    subCompile(Deno.args[1]);
+    const result = compileSource(await Deno.readTextFile(Deno.args[1]));
+    if (result.success) {
+      console.log(`Compilation took ${Math.trunc(result.timeMs)}ms.`);
+      await Deno.writeTextFile(Deno.args[1].replace(/.z$/,'.py'), result.output);
+    }
+    else {
+      console.log("Compile Failed");
+      for (let e of result.errors)
+        console.log(e.message);
+    }
   }
   // default to zed 'help' subcommand
   else {

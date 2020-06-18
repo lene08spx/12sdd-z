@@ -1,10 +1,11 @@
-const newline = /[\r\n]/;
+const allNewline = /(\r\n|[\n\v\f\r\x85\u2028\u2029])/g;
 const zedTokenRules = {
   "keyword": /(?<keyword>\b(?:PROG|ENDPROG|DO|ENDDO|OUT|IN|IF|OTHERWISE|ENDIF|SWITCH|ENDSWITCH|FOR|FROM|TO|BY|ENDFOR|WHEN|ENDWHEN|REPEAT|UNTIL|ENDREPEAT)\b)/,
   "operator": /(?<operator>\+|-|\*|\/|>=|<=|>|<|==|&&|\|\||!|:|\[|\]|=)/,
   "string": /(?<string>"[ !#-~]*")/,
   "number": /(?<number>\b\d+(?:\.\d+)?\b)/,
   "variable": /(?<variable>\b[A-Z]\d+\b)/,
+  "identifier": /(?<identifier>\b[A-Za-z_]+\b)/,
   "other": /(?<other>[^\s]+)/,
 } as const;
 const zedToken = new RegExp(Object.values(zedTokenRules).map(v=>v.source).join("|"), "g");
@@ -30,13 +31,13 @@ function tokenFromMatch(m: RegExpMatchArray): Token {
 
 /** Perform lexical analysis on source code, returning a list of tokens. */
 export function lex(source: string): Token[] {
-  const lines = source.split(newline);
+  const lines = source.split(/\r?\n/);
   const tokenList: Token[] = [];
   for (let i = 0; i < lines.length; i++) {
     const tokenMatches = lines[i].matchAll(zedToken);
     for (let match of tokenMatches) {
       const token = tokenFromMatch(match);
-      token.line = i;
+      token.line = i+1;
       tokenList.push(token);
     }
   }
