@@ -1,5 +1,6 @@
-import { compileSource } from "./compile.ts";
+import { compileSource } from "./compiler/compile.ts";
 //import { IDE } from "./ide.ts";
+import { WebView } from "./deps.ts";
 
 export const zedConfig = {
   name: "zed",

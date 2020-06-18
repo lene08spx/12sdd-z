@@ -1,3 +1,0 @@
-[Compilation](SourceCode)=>(PythonObjectCode|Errors): Lex -> Parse -> TypeAndValueCheck -> Compile
-
-[EditorRun](ScriptID)=>(WebsocketConnection)

@@ -1,5 +1,13 @@
-- [] Where will errors be displayed?
-- [x] Save button in GUI.
-- [] Constraint: Installation
-
-Cast Number and String in python in conditions
+- [ ] Open IDE
+- [ ] IDE Ops
+- [ ] IDE File Dialog
+- [ ] Run .py output
+- [ ] Open .z source file
+- [ ] IDE Design Editor
+---
+- [ ] Zed Lang Docs
+- [ ] Software Package Docs
+- [ ] Installation Manual (thorough)
+---
+- [ ] Warp to create EXE package
+- [ ] EditBin SUBSYSTEM to make warp have no console window
