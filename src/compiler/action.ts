@@ -10,7 +10,7 @@ import {
   ZedForLoop,
 } from "./parse.ts";
 
-class ZedUndefinedError extends Error {
+export class ZedUndefinedError extends Error {
   constructor(public variable: ZedVariable){super(`Undefined variable '${variable.identifier}' at line ${variable.token?.line} char ${variable.token?.position}`)}
 }
 

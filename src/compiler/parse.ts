@@ -449,8 +449,9 @@ export class ZedMultiwaySelection {
 
 export class ZedProgram {
   code: ZedCodeBlock | null;
-  errors: (ParserError|UnexpectedEndOfProgram)[];
+  errors: ParserError[];
   identifier: string;
+  unexpectedEnd: boolean = false;
   constructor(t: TokenArray) {
     try {
       t.read(syntaxTests.PROG);
@@ -460,8 +461,10 @@ export class ZedProgram {
     } catch (e) {
       this.code = null;
       this.identifier = '';
-      if (e instanceof UnexpectedEndOfProgram)
+      if (e instanceof UnexpectedEndOfProgram) {
         this.errors = e.currentErrors;
+        this.unexpectedEnd = true;
+      }
       else
         this.errors = [e];
     }

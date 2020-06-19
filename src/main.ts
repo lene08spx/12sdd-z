@@ -1,133 +1,106 @@
 // Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
 
-import { compileSource } from "./compiler/compile.ts";
-//import { IDE } from "./ide.ts";
-import { WebView } from "./deps.ts";
+import { Sha1, decode, serve, Server, ServerRequest, parsePath, exists, acceptWebSocket } from "./deps.ts";
+import { compileSource, CompilationResult } from "./compiler/compile.ts";
+import { hostScript } from "./compiler/host.ts";
 
-export const zedConfig = {
-  name: "zed",
-  version: "0.0.1",
-  description: "A compiler for the Z Programming Language"
+const wwwPath = decodeURI(parsePath(import.meta.url).dir.replace("file:///",""))+"/ide";
+
+const mimeTypes: Record<string, string> = {
+  ".html": "text/html",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".css": "text/css",
+  ".txt": "text/plain",
+  ".js": "text/javascript",
+  ".svg": "image/svg+xml",
 };
 
-async function runPython(script: string) {
-  const proc = Deno.run({
-    cmd: ["python", "-c", script]/*,
-    stderr: "piped", stdin: "inherit", stdout: "inherit"*/
-  });
-  await proc.status();
-  Deno.close(proc.rid);
-}
+function sha1(data: string): string { return new Sha1().update(data).hex(); }
 
-async function subCompile(srcFile: string) {
-  //const outFilename = srcFile.replace(/\.z$/m, "") + ".py";
-  //const result = await compileFile(srcFile);
-  //console.log(`Compilation took ${result.time}ms.`);
-  //await Deno.writeFile(outFilename, result.buffer.bytes());
-  //return outFilename;
-}
-
-function subHelp() {
-  console.log(zedConfig.name + " " + zedConfig.version + "\n" + zedConfig.description + "\n" );
-  console.log("USAGE:");
-  console.log("    zed compile <file>");
-  console.log("    zed edit [file]");
-  console.log("    zed help");
-  console.log("    zed repl");
-  console.log("    zed run <file>");
-}
-
-if (import.meta.main) {
-  // handle zed 'run' subcommand
-  if (
-    Deno.args[0] === "run" &&
-    Deno.args.length === 2
-  ) {
-    //const compileResult = compile(await Deno.readTextFile(Deno.args[1]));
-    //console.log(compileResult);
-    //const str = new TextDecoder().decode(compileResult.buffer.bytes());
-    //console.log(str);
-    //await runPython(str);
+export class IDE {
+  #server: Server;
+  #compileCache = new Map<string, CompilationResult>();
+  #port: number = 2020
+  constructor(port = 2020) {
+    this.#port = port;
+    this.#server = serve({ port: this.#port });
   }
-  // handle zed 'edit' subcommand
-  else if (
-    Deno.args[0] === "edit"
-  ) {
-    const html = `
-    <!DOCTYPE HTML>
-    <html>
-      <body>
-        <script>
-          document.body.innerHTML = window.navigator.userAgent;
-        </script>
-      </body>
-    </html>`;
-    const win = new WebView({
-      title: "Local deno_webview example",
-      url: `data:text/html,${encodeURIComponent(html)}`,
-      width: 800,
-      height: 600,
-      resizable: true,
-
+  async run(): Promise<void> {
+    (async()=>{for await (const r of this.#server) this.handleRequest(r)})();
+    this.launchWindow();
+    //this.#server.close();
+  }
+  async launchWindow() {
+    const proc = Deno.run({
+      cmd: ["cmd", "/C", "start", "", `http://localhost:${this.#port}/editor.html`],
+      stdin: "null", stdout: "null", stderr: "null",
     });
-    await win.run();
-
-    //const ide = new IDE();
-    //ide.start();
-    //ide.open();
+    await proc.status();
+    proc.close();
   }
-  // handle zed 'compile' subcommand
-  else if (
-    Deno.args[0] === "compile" &&
-    Deno.args.length === 2
-  ) {
-    const result = compileSource(await Deno.readTextFile(Deno.args[1]));
-    if (result.success) {
-      console.log(`Compilation took ${Math.trunc(result.timeMs)}ms.`);
-      await Deno.writeTextFile(Deno.args[1].replace(/.z$/,'.py'), result.output);
+  private async handleRequest(r: ServerRequest): Promise<void> {
+    //console.log(r.url);
+    if (r.url === "/op/compile") {
+      return this.opCompile(r);
+    }
+    else if (r.url === "/op/run") {
+      return this.opRun(r);
     }
     else {
-      console.log("Compile Failed");
-      for (let e of result.errors)
-        console.log(e.message);
+      return this.httpServe(r);
     }
   }
-  // default to zed 'help' subcommand
-  else {
-    subHelp();
+  private async httpServe(r: ServerRequest): Promise<void> {
+    r.url = r.url.split("?")[0];
+    const fileExists = await exists(wwwPath+r.url);
+    if (!fileExists) return r.respond({status:404});
+    const fileInfo = await Deno.stat(wwwPath+r.url);
+    if (!fileInfo.isFile) return r.respond({status:404});
+    return r.respond({
+      status: 200,
+      headers: new Headers({
+        "Content-Type": mimeTypes[parsePath(r.url).ext] ?? "text/plain"
+      }),
+      body: await Deno.readFile(wwwPath+r.url),
+    });
   }
-  // handle zed 'repl' subcommand
-  //else if (
-  //  cliFlags._[0] === "repl"
-  //) {
-  //
-  //}
-  /*
-  if (Deno.args.length === 0) {
-    printHelp();
+  /** Input (POST):
+   *    r.body => string => Zed Source Code
+   * 
+   *  Output (application/json):
+   *    CompilationResult
+   */
+  private async opCompile(r: ServerRequest): Promise<void> {
+    const sourceCode = decode(await Deno.readAll(r.body));
+    const hash = sha1(sourceCode);
+    if (this.#compileCache.has(hash)) {
+      return r.respond({
+        status: 200,
+        headers: new Headers({"Content-Type": mimeTypes[".json"]}),
+        body: JSON.stringify(this.#compileCache.get(hash)),
+      });
+    } else {
+      const result = compileSource(sourceCode);
+      this.#compileCache.set(hash, result);
+      return r.respond({
+        status: 200,
+        headers: new Headers({"Content-Type": mimeTypes[".json"]}),
+        body: JSON.stringify(result),
+      });
+    }
   }
-  else {
-    if (Deno.args[0] === "run") {
-      let filename = Deno.args[1];
-      if (filename && filename.endsWith(".z")) {
-        // compile source
-        console.log("Compile", parsePath(filename).base);
-        const compileResult = await zedCompile(filename);
-        console.log(`Took ${compileResult.time}ms.`);
-        // hold output in temp-file
-        const tempPath = await Deno.makeTempFile({prefix:"zed-obj-"});
-        const tempFile = await Deno.copy(compileResult.buffer, await Deno.create(tempPath));
-        const proc = Deno.run({
-          cmd: ["python", tempPath]
-        });
-        await proc.status();
-        await Deno.remove(tempPath);
-      } else {
-        console.log("Nothing to run.");
-      }
-    }
-    else {
-      printHelp();
-    }
-  }*/
+  private async opRun(r: ServerRequest): Promise<void> {
+    const hash = decode(await Deno.readAll(r.body));
+    const sock = await acceptWebSocket({
+      conn: r.conn,
+      bufWriter: r.w,
+      bufReader: r.r,
+      headers: r.headers,
+    });
+    return hostScript(sock, this.#compileCache.get(hash)!);
+  }
 }
+
+new IDE().run();

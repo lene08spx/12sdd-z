@@ -4,11 +4,11 @@
 ///<reference lib="dom"/>
 
 /**
- * 
  * @param {string} code 
- * @param {any} data 
+ * @param {Record<string,any>} data 
+ * @returns {Promise<Record<string,any>>} 
  */
-async function op(code,data) {
+async function op(code, data) {
   const result = await fetch("/op/"+code,{
     body: JSON.stringify(data),
     method: "POST",
@@ -16,7 +16,7 @@ async function op(code,data) {
       ["Content-Type", "application/json"]
     ],
   });
-  return result.text()
+  return result.json()
 }
 
 async function compileAndRun() {

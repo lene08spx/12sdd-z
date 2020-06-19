@@ -20,6 +20,7 @@ Following this is a copy of the GNU General Public License version 3;
 + [Deno Software License](#)
 + [Python Software License](#)
 + [deno_webview Software License](#)
++ [Cascadia Code Software License](#)
 
 ## GNU GENERAL PUBLIC LICENSE
 

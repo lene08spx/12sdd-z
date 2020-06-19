@@ -1,10 +1,12 @@
 // Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
 
-import { encode } from "../deps.ts";
-import { lex } from "./lex.ts";
-import { TypeCheckInstance } from "./action.ts";
+import { Sha1 } from "../deps.ts";
+import { lex, Token } from "./lex.ts";
+import { TypeCheckInstance, ZedUndefinedError } from "./action.ts";
 import {
   parse,
+  UnexpectedEndOfProgram,
+  ParserError,
   ZedProgram,
   ZedCodeBlock,
   ZedAssignment,
@@ -188,28 +190,45 @@ function compile(p: ZedProgram): string {
   return output;
 }
 
-interface CompilationResult {
+export interface CompilationError {
+  type: "eof" | "parser" | "undefined";
+  message: string;
+  token: Token | null;
+}
+
+export interface CompilationResult {
+  hash: string;
   success: boolean;
   timeMs: number;
+  source: string;
   output: string;
-  errors: Error[];
+  errors: CompilationError[];
 }
 
 export function compileSource(sourceCode: string): CompilationResult {
-  const errors: Error[] = [];
+  const errors: CompilationError[] = [];
+  const hash = new Sha1().update(sourceCode).hex();
   let objCode: string = '';
   const startTime = performance.now();
   const toks = lex(sourceCode);
   const program = parse(toks);
-  errors.push(...program.errors);
+  if (program.unexpectedEnd)
+    errors.push({type: "eof", message: "Unexpected end of file.", token: null})
+  for (let e of program.errors) {
+    errors.push({type: "parser", message: e.message, token: e.token});
+  }
   if (program.code !== null) {
-    errors.push(...new TypeCheckInstance(program).errors);
+    for (let e of new TypeCheckInstance(program).errors) {
+      errors.push({type: "undefined", message: e.message, token: e.variable.token!});
+    }
     if (errors.length < 1) objCode = compile(program);
   }
   const endTime = performance.now();
   return {
+    hash: hash,
     success: errors.length < 1,
     timeMs: endTime - startTime,
+    source: sourceCode,
     output: objCode,
     errors: errors,
   };

@@ -4,5 +4,4 @@ export { parse as parsePath } from "../lib/deno_std/path/mod.ts";
 export { exists } from "../lib/deno_std/fs/exists.ts";
 export { serve, ServerRequest, Server } from "../lib/deno_std/http/server.ts"
 export { Sha1 } from "../lib/deno_std/hash/sha1.ts";
-export { createWebSocket, WebSocket, acceptWebSocket } from "../lib/deno_std/ws/mod.ts";
-export { WebView } from "../lib/deno_webview/mod.ts";
+export { WebSocket, acceptWebSocket, isWebSocketCloseEvent } from "../lib/deno_std/ws/mod.ts";
