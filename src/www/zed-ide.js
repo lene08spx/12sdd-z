@@ -1,9 +1,20 @@
+// Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
+
+//@ts-nocheck
 ///<reference lib="dom"/>
 
-async function op(code="",data="") {
+/**
+ * 
+ * @param {string} code 
+ * @param {any} data 
+ */
+async function op(code,data) {
   const result = await fetch("/op/"+code,{
-    body: data,
-    method: "POST"
+    body: JSON.stringify(data),
+    method: "POST",
+    headers: [
+      ["Content-Type", "application/json"]
+    ],
   });
   return result.text()
 }

@@ -1,3 +1,5 @@
+// Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
+
 import { Sha1, StringReader, WebSocket } from "./deps.ts";
 import { lex } from "./lex.ts";
 import { parse } from "./parse.ts";

@@ -1,3 +1,5 @@
+// Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
+
 import { compileSource } from "./compiler/compile.ts";
 //import { IDE } from "./ide.ts";
 import { WebView } from "./deps.ts";
@@ -51,6 +53,25 @@ if (import.meta.main) {
   else if (
     Deno.args[0] === "edit"
   ) {
+    const html = `
+    <!DOCTYPE HTML>
+    <html>
+      <body>
+        <script>
+          document.body.innerHTML = window.navigator.userAgent;
+        </script>
+      </body>
+    </html>`;
+    const win = new WebView({
+      title: "Local deno_webview example",
+      url: `data:text/html,${encodeURIComponent(html)}`,
+      width: 800,
+      height: 600,
+      resizable: true,
+
+    });
+    await win.run();
+
     //const ide = new IDE();
     //ide.start();
     //ide.open();

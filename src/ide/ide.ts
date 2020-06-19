@@ -1,3 +1,5 @@
+// Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
+
 import { serve, Server, ServerRequest, parsePath, exists, acceptWebSocket } from "../deps.ts";
 import { ScriptHost, CompileErrors } from "./host.ts";
 

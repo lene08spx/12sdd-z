@@ -1,3 +1,5 @@
+// Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
+
 // walk the program tree, and get what's in what scope
 
 import {

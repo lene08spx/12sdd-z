@@ -1,3 +1,5 @@
+// Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
+
 import { Token, TokenType } from "./lex.ts";
 
 // TODO->Assert minimum required tokens to help alleviate unexpected encountering of EndOfTokens Parser errors.
