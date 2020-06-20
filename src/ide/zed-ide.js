@@ -11,6 +11,7 @@ const sourceMain = document.getElementById('editor-main');
 const $ = document.querySelector.bind(document);
 let socket = null;
 
+// Load the work which was last left off from again.
 const pageStorage = window["localStorage"];
 if (sourceMain !== null) {
   window.addEventListener("load",e=>{
@@ -19,6 +20,7 @@ if (sourceMain !== null) {
   });
 }
 
+/** An object mapping a RegExp pattern to a TokenType. */
 const zedTokenRules = {
   "keyword": /(?<keyword>\b(?:PROG|ENDPROG|DO|ENDDO|OUT|IN|IF|OTHERWISE|ENDIF|SWITCH|ENDSWITCH|FOR|FROM|TO|BY|ENDFOR|WHEN|ENDWHEN|REPEAT|UNTIL|ENDREPEAT)\b)/,
   "operator": /(?<operator>\+|-|\*|\/|>=|<=|>|<|==|&&|\|\||!|:|\[|\]|=|%)/,
@@ -29,43 +31,40 @@ const zedTokenRules = {
   "comment": /(?<comment>#.*)/,
   "other": /(?<other>[^\s]+)/,
 };
-const zedToken = new RegExp(Object.values(zedTokenRules).map(v=>v.source).join("|"), "g");
-
-function tokenFromMatch(m) {
-  // retrieve the entry in m.groups which is not undefined, this is the right token type and holds the desired value
-  const [ tokType, tokValue ] = Object.entries(m.groups??{}).filter(v=>v[1]!==undefined)[0];
-  return {
-    type: tokType,
-    value: tokValue,
-    line: 0,
-    position: m.index ?? 0,
-    absolutePos: 0,
-  };
+/** The RegExp instance used to match all tokens relevant to Zed. */
+const zedTokenPattern = new RegExp(Object.values(zedTokenRules).map(v=>v.source).join("|"), "g");
+/** Generate a Token given the RegExp match list from zedTokenPattern, and the lineNumber. */
+function tokenFromMatch(matchedTokens, lineNumber) {
+  const [ tokType, tokValue ] = Object.entries(matchedTokens.groups??{}).filter(v=>v[1]!==undefined)[0];
+  return { type: tokType, value: tokValue, line: lineNumber, position: m.index ?? 0, absolutePos: 0, };
 }
-
-/** Perform lexical analysis on source code, returning a list of tokens. */
+/** Given the source code as a string,
+ *  perform lexical analysis
+ *  and return a list of tokens.
+ * Differing from lex.ts is the handling of comments,
+ * we want to keep them for visual display. */
 function lex(source) {
-  const lines = source.split(/\r?\n/);
   const tokenList = [];
-  for (let i = 0; i < lines.length; i++) {
-    const tokenMatches = lines[i].matchAll(zedToken);
+  const lines = source.split(/\r?\n/);
+  for (let lineNo = 0; lineNo < lines.length; lineNo++) {
+    const tokenMatches = lines[lineNo].matchAll(zedTokenPattern);
     for (let match of tokenMatches) {
-      const token = tokenFromMatch(match);
-      token.line = i+1;
-      token.absolutePos = lines.slice(0, i).join('').length+token.position+i;//+i for newlines
+      const token = tokenFromMatch(match, lineNo+1);
+      token.absolutePos = lines.slice(0, lineNo).join('').length+token.position+lineNo;//+lineNo for newlines
       tokenList.push(token);
     }
   }
   return tokenList;
 }
 
-
+/** Asynchronus function to delay by the given milliseconds. */
 function delay(ms){return new Promise(r=>{setTimeout(r,ms)})}
 
 /**
- * @param {string} code 
- * @param {string} data 
+ * @param {string} code OpCode
+ * @param {string} data Payload String
  * @returns {Promise<Record<string,any>>} 
+ * Run an Op on the editor web-server.
  */
 async function op(code, data) {
   const result = await fetch("/op/"+code,{
@@ -93,9 +92,9 @@ async function connectProcess() {
   sock.addEventListener("message", async e=>{
     //console.log(e.data);
     const txt = e.data;
-    if (txt.startsWith('"--FATAL"')) {
+    if (txt.startsWith('\n\n\nFATAL')) {
       output.innerHTML += "<br><span class='error'><br>Runtime Errors from Python<br></span><br>"
-      output.innerHTML += `<span class="error">${txt.replace('"--FATAL"',"")}</span><br>`;
+      output.innerHTML += `<span class="error">${txt.replace('\n\n\nFATAL',"")}</span><br>`;
     }
     else
       output.textContent += txt+"\n";

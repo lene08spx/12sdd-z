@@ -1,11 +1,14 @@
 # The Zed Programming Language
-An exercise in writing a compiler.
+A compiler for the Zed Programming Language.
+Compiles to Python 3.
 
 ## Installation
 Simply download and run the executable from the releases.
 ### Tested to work on:
 - Windows 10 `v1903`
 - Chrome `v83`
+- Source Files with CRLF, LF endings.
+- TCP Port 2020 must be available for the IDE to start.
 ### Bundled Dependencies
 - Python `v3.8.3`
 - Deno `v1.1.0`

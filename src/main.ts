@@ -4,8 +4,10 @@ import { Sha1, decode, serve, Server, ServerRequest, parsePath, exists, acceptWe
 import { compileSource, CompilationResult } from "./compiler/compile.ts";
 import { hostScript } from "./compiler/host.ts";
 
+/** The root folder of the ide. */
 const wwwPath = decodeURI(parsePath(import.meta.url).dir.replace("file:///",""))+"/ide";
 
+/** Any mime-types used in tranferring data. */
 const mimeTypes: Record<string, string> = {
   ".html": "text/html",
   ".png": "image/png",
@@ -19,11 +21,16 @@ const mimeTypes: Record<string, string> = {
   ".pdf": "application/pdf",
 };
 
+/** Generate a sha1 hash from the input data. */
 function sha1(data: string): string { return new Sha1().update(data).hex(); }
 
+/** Singleton class for the IDE */
 export class IDE {
+  /** Private reference to the web-server */
   #server: Server;
+  /** Private reference to the compiler cache. */
   #compileCache = new Map<string, CompilationResult>();
+  /** Private reference to the server port number. */
   #port: number = 2020
   constructor(port = 2020) {
     this.#port = port;
@@ -32,11 +39,13 @@ export class IDE {
       port: this.#port
     });
   }
+  /** Start the ide. */
   async run(): Promise<void> {
     (async()=>{for await (const r of this.#server) this.handleRequest(r)})();
     this.launchWindow();
     //this.#server.close();
   }
+  /** launch the editor window */
   async launchWindow() {
     const proc = Deno.run({
       cmd: ["cmd", "/C", "start", "", `http://localhost:${this.#port}/zeditor.html`],
@@ -45,6 +54,7 @@ export class IDE {
     await proc.status();
     proc.close();
   }
+  /** handle incoming http requests */
   private async handleRequest(r: ServerRequest): Promise<void> {
     //console.log(r.url);
     if (r.url === "/op/compile") {
@@ -57,6 +67,7 @@ export class IDE {
       return this.httpServe(r);
     }
   }
+  /** serve up as a file-server */
   private async httpServe(r: ServerRequest): Promise<void> {
     r.url = r.url.split("?")[0];
     const fileExists = await exists(wwwPath+r.url);
@@ -80,12 +91,14 @@ export class IDE {
   private async opCompile(r: ServerRequest): Promise<void> {
     const sourceCode = decode(await Deno.readAll(r.body));
     const hash = sha1(sourceCode);
+    // if the file has already been compiled, return that
     if (this.#compileCache.has(hash)) {
       return r.respond({
         status: 200,
         headers: new Headers({"Content-Type": mimeTypes[".json"]}),
         body: JSON.stringify(this.#compileCache.get(hash)),
       });
+    // if its a new file, recompile it
     } else {
       const result = compileSource(sourceCode);
       this.#compileCache.set(hash, result);
@@ -96,6 +109,7 @@ export class IDE {
       });
     }
   }
+  /** upgrade to Websocket, and keep a pipe open between IDE terminal and Script Host */
   private async opRun(r: ServerRequest): Promise<void> {
     const hash = new URL(r.url,"file:").searchParams.get("id")!;
     const sock = await acceptWebSocket({
@@ -104,8 +118,9 @@ export class IDE {
       bufReader: r.r,
       headers: r.headers,
     });
+    // if the hash isnt in the cache, tell the IDE terminal user to close and reopen
     if (!this.#compileCache.has(hash)) {
-      sock.send('"--FATAL"Please close this terminal window.');
+      sock.send('\n\n\nFATALPlease close this terminal window.');
       return sock.close();
     }
     else {
@@ -114,4 +129,5 @@ export class IDE {
   }
 }
 
+// Start the IDE
 new IDE().run();

@@ -111,8 +111,6 @@ Deno.test("ZedAssignment->variable", ()=>{
       target: new ZedVariable("A1"),
       operand: new ZedVariable("Z80"),
       operator: null,
-      startTokenIndex: 0,
-      endTokenIndex: 2,
     } as ZedAssignment
   );
 });
@@ -126,8 +124,6 @@ Deno.test("ZedAssignment->string", ()=>{
       target: new ZedVariable("A1"),
       operand: new ZedString(`"Hello"`),
       operator: null,
-      startTokenIndex: 0,
-      endTokenIndex: 2,
     } as ZedAssignment
   );
 });
@@ -141,8 +137,6 @@ Deno.test("ZedAssignment->number", ()=>{
       target: new ZedVariable("A1"),
       operand: new ZedNumber(42),
       operator: null,
-      startTokenIndex: 0,
-      endTokenIndex: 2,
     } as ZedAssignment
   );
 });
@@ -156,8 +150,6 @@ Deno.test("ZedAssignment->operator", ()=>{
       target: new ZedVariable("A1"),
       operand: new ZedNumber(42),
       operator: "+",
-      startTokenIndex: 0,
-      endTokenIndex: 3,
     } as ZedAssignment
   );
 });
@@ -171,8 +163,6 @@ Deno.test("ZedAssignment->input", ()=>{
       target: new ZedVariable("A1"),
       operand: { promptParams: {items:[]} } as ZedInput,
       operator: null,
-      startTokenIndex: 0,
-      endTokenIndex: 4,
     } as ZedAssignment
   );
 });
@@ -276,8 +266,6 @@ Deno.test("ZedDoBlock->assign", ()=>{
           target: new ZedVariable("A1"),
           operand: new ZedNumber(Number("2")),
           operator: null,
-          startTokenIndex: 1,
-          endTokenIndex: 3,
         } as ZedAssignment
       ],
     } as ZedDoBlock
@@ -297,15 +285,11 @@ Deno.test("ZedDoBlock->assignForgotEndOfStatement", ()=>{
           target: new ZedVariable("A1"),
           operand: new ZedNumber(Number("2")),
           operator: null,
-          startTokenIndex: 1,
-          endTokenIndex: 3,
         } as ZedAssignment,
         {
           target: new ZedVariable("B1"),
           operand: new ZedNumber(Number("3")),
           operator: "+",
-          startTokenIndex: 4,
-          endTokenIndex: 7,
         } as ZedAssignment
       ],
       errors: [

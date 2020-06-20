@@ -3,7 +3,6 @@
 - [x] (Lex) Allow comments in Zed Source Code.
 - [ ] CHange allowable input characters
 - [x] On SWITCH WHEN fail until next WHEN
-- [ ] ParserBlock (fail fast to end of block keyword)
 ## IDE
 - [x] Open IDE
 - [x] IDE Ops
