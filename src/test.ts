@@ -24,9 +24,9 @@ import {
 
 Deno.test("lex", ()=>{
   assertEquals(lex(`PROG HI\nENDPROG`), [
-    { type: "keyword", value: "PROG", line: 0, position: 0 },
-    { type: "identifier", value: "HI", line: 0, position: 5 },
-    { type: "keyword", value: "ENDPROG", line: 1, position: 0 },
+    { type: "keyword", value: "PROG", line: 1, position: 0 },
+    { type: "identifier", value: "HI", line: 1, position: 5 },
+    { type: "keyword", value: "ENDPROG", line: 2, position: 0 },
   ])
 });
 
@@ -292,14 +292,6 @@ Deno.test("ZedDoBlock->assignForgotEndOfStatement", ()=>{
   assertEquals(
     result,
     {
-      errors: [
-        new ParserError(syntaxTests.endOfStatement, {
-          type: "operator",
-          value: "=",
-          line: 0,
-          position: 10
-        } as Token)
-      ],
       statements: [
         {
           target: new ZedVariable("A1"),
@@ -315,6 +307,14 @@ Deno.test("ZedDoBlock->assignForgotEndOfStatement", ()=>{
           startTokenIndex: 4,
           endTokenIndex: 7,
         } as ZedAssignment
+      ],
+      errors: [
+        new ParserError(syntaxTests.endOfStatement, {
+          type: "operator",
+          value: "=",
+          line: 1,
+          position: 10
+        } as Token)
       ],
     } as ZedDoBlock
   );
@@ -524,7 +524,8 @@ Deno.test("ZedMultiwaySelection->empty", ()=>{
     result,
     {
       variable: new ZedVariable("A1"),
-      whenValueThenCode: []
+      whenValueThenCode: [],
+      errors: [],
     } as ZedMultiwaySelection
   )
 });
@@ -546,7 +547,8 @@ Deno.test("ZedMultiwaySelection->single", ()=>{
             errors: []
           }
         ]
-      ]
+      ],
+      errors: [],
     } as ZedMultiwaySelection
   )
 });

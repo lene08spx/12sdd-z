@@ -16,8 +16,7 @@
 <h1>What is a Program?</h1>
 <pre><code>
 PROG Program_Name
-  instruction:
-  instruction:
+  OUT["Hello, World"]:
 ENDPROG
 </code></pre>
 
@@ -84,7 +83,76 @@ ENDFOR
 
 <h1>IF statement</h1>
 <pre><code>
+= X1 1:
+IF == X1 1
+  DO
+    OUT["ONE"]:
+  ENDDO
+OTHERWISE IF == X1 2
+  DO
+    OUT["TWO"]:
+  ENDDO
+OTHERWISE
+  DO
+    OUT["ANYTHING"]:
+  ENDDO
+ENDIF
+</code></pre>
 
+<hr>
+
+<h1>SWITCH statement</h1>
+<pre><code>
+= X1 "apple":
+SWITCH X1
+  WHEN "apple"
+    DO
+      OUT["Le Pomme"]:
+    ENDDO
+  WHEN "orange"
+    DO
+      OUT["Le Citrus"]:
+    ENDDO
+ENDSWITCH
+</code></pre>
+
+<hr>
+
+<h1>Operator Assignments</h1>
+<pre><code>
+= A1 10:
+OUT[A1]:
+= A1 2+:
+OUT[A1]:
+= A1 3-:
+OUT[A1]:
+= A1 4*:
+OUT[A1]:
+= A1 6/:
+OUT[A1]:
+= A1 2%:
+OUT[A1]:
+</code></pre>
+
+<hr>
+
+<h1>Comparative Conditions</h1>
+<pre><code>
+&lt; 1 2:   # true
+&gt; 1 2:   # false
+&lt;= 2 2:  # true
+&gt;= 3 2:  # true
+== 1 1:  # true
+</code></pre>
+
+<hr>
+
+<h1>Logical Conditions</h1>
+<pre><code>
+&& == 1 1 == 0 1: # false
+|| == 1 1 == 0 1: # true
+! && == 1 1 == 0 1: # true
+! || == 1 1 == 0 1: # false
 </code></pre>
 
 </main>

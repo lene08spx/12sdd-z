@@ -1,11 +1,15 @@
-# The Z Programming Language
+# The Zed Programming Language
 An exercise in writing a compiler.
 
 ## Installation
-1. Windows Computer Required
-- python version of object code
-- dependencies versions
-- chrome: browser requirement
+Simply download and run the executable from the releases.
+### Tested to work on:
+- Windows 10 `v1903`
+- Chrome `v83`
+### Bundled Dependencies
+- Python `v3.8.3`
+- Deno `v1.1.0`
+- Deno Standard Library `v0.57.0`
 
 ## Exercise One: *Hello, World!*
 ```st

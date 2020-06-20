@@ -242,7 +242,11 @@ main {
 
 .theme-editor-keyword {
   color: var(--theme-editor-keyword-colour);
-  text-shadow:0px 0px 1px var(--theme-editor-keyword-colour);
+  text-shadow:
+  -0.4px 0 0 var(--theme-editor-keyword-colour),  
+  -0.2px 0 0 var(--theme-editor-keyword-colour),
+   0.2px 0 0 var(--theme-editor-keyword-colour),
+   0.4px 0 0 var(--theme-editor-keyword-colour);
 }
 .theme-editor-string {
   color: var(--theme-editor-string-colour);
@@ -258,7 +262,11 @@ main {
 }
 .theme-editor-identifier {
   color: var(--theme-editor-identifier-colour);
-  text-shadow: 0px 0px 1px var(--theme-editor-identifier-colour);
+  text-shadow:
+  -0.5px 0 0 var(--theme-editor-identifier-colour),  
+  -0.25px 0 0 var(--theme-editor-identifier-colour),
+   0.25px 0 0 var(--theme-editor-identifier-colour),
+   0.5px 0 0 var(--theme-editor-identifier-colour);
 }
 .theme-editor-comment {
   font-style: var(--theme-editor-comment-style);
