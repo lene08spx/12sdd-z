@@ -2,9 +2,9 @@
 <!-- Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0 -->
 <html>
 <head>
-  <title>Zed-Edit</title>
-  <link href="./zed-edit.css" rel="stylesheet">
+  <title>Zed Editor</title>
   <meta charset="utf-8">
+  <link href="./zed.css" rel="stylesheet">
 </head>
 <body>
   <header id="editor-header">
@@ -12,17 +12,18 @@
       <div class="menu-item">
         <span class="menu-title">File</span>
         <div class="menu-list">
-          <a href="./old_edit.html" download>New</a>
-          <button>Open</button>
-          <button>Save</button>
+          <button onclick="editorNew()">New</button>
+          <button onclick="editorOpen()">Open</button>
+          <button onclick="editorSave()">Save</button>
+          <button onclick="editorCompile()">Compile</button>
         </div>
       </div>
       <div class="menu-item">
         <span class="menu-title">Help</span>
         <div class="menu-list">
-          <button>Editor</button>
-          <button>Zed Lang</button>
-          <button>About</button>
+          <a href="#" target="_blank">Editor</a>
+          <a href="#" target="_blank">Zed Lang</a>
+          <a href="#" target="_blank">About</a>
         </div>
       </div>
     </nav>
@@ -30,10 +31,9 @@
     <button onclick="compileAndRun()">▶</button>
   </header>
   <main id="editor-main">
-    <textarea id="editor-input" spellcheck="false"></textarea>
-    <!--<pre id="editor-preview"></pre>-->
+    <textarea id="editor-input" spellcheck="false" oninput="updateCodePreview()"></textarea>
+    <pre id="editor-preview"><span id='editor-end-of-tokens-error'></span></pre>
   </main>
-  <footer><span id="editor-current-file">C:\Users\JoeBloggs\Desktop\program.z</span></footer>
   <script src="./zed-ide.js"></script>
 </body>
 </html>

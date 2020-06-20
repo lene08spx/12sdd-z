@@ -5,18 +5,18 @@ PROG FIZZBUZZ
   = M1 IN["MAX : "]:
   WHEN <= I1 M1 DO
     = O1 0:
-    IF AND >= X5 5 >= X3 3 DO
+    IF && >= X5 5 >= X3 3 DO
       OUT["FIZZ BUZZ"]:
       = X3 0:
       = X5 0:
       = O1 1:
     ENDDO ENDIF
-    IF AND >= X3 3 == O1 0 DO
+    IF && >= X3 3 == O1 0 DO
       OUT["FIZZ"]:
       = X3 0:
       = O1 1:
     ENDDO ENDIF
-    IF AND >= X5 5 == O1 0 DO
+    IF && >= X5 5 == O1 0 DO
       OUT["BUZZ"]:
       = X5 0:
       = O1 1:

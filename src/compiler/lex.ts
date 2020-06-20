@@ -8,6 +8,7 @@ const zedTokenRules = {
   "number": /(?<number>\b\d+(?:\.\d+)?\b)/,
   "variable": /(?<variable>\b[A-Z]\d+\b)/,
   "identifier": /(?<identifier>\b[A-Za-z_]+\b)/,
+  "comment": /(?<comment>#.*)/,
   "other": /(?<other>[^\s]+)/,
 } as const;
 const zedToken = new RegExp(Object.values(zedTokenRules).map(v=>v.source).join("|"), "g");
@@ -39,6 +40,7 @@ export function lex(source: string): Token[] {
     const tokenMatches = lines[i].matchAll(zedToken);
     for (let match of tokenMatches) {
       const token = tokenFromMatch(match);
+      if (token.type === "comment") continue;
       token.line = i+1;
       tokenList.push(token);
     }

@@ -15,6 +15,8 @@ const mimeTypes: Record<string, string> = {
   ".txt": "text/plain",
   ".js": "text/javascript",
   ".svg": "image/svg+xml",
+  ".json": "application/json",
+  ".pdf": "application/pdf",
 };
 
 function sha1(data: string): string { return new Sha1().update(data).hex(); }
@@ -25,7 +27,10 @@ export class IDE {
   #port: number = 2020
   constructor(port = 2020) {
     this.#port = port;
-    this.#server = serve({ port: this.#port });
+    this.#server = serve({
+      hostname: "0.0.0.0",
+      port: this.#port
+    });
   }
   async run(): Promise<void> {
     (async()=>{for await (const r of this.#server) this.handleRequest(r)})();
@@ -45,7 +50,7 @@ export class IDE {
     if (r.url === "/op/compile") {
       return this.opCompile(r);
     }
-    else if (r.url === "/op/run") {
+    else if (r.url.startsWith("/op/run")) {
       return this.opRun(r);
     }
     else {
@@ -92,14 +97,20 @@ export class IDE {
     }
   }
   private async opRun(r: ServerRequest): Promise<void> {
-    const hash = decode(await Deno.readAll(r.body));
+    const hash = new URL(r.url,"file:").searchParams.get("id")!;
     const sock = await acceptWebSocket({
       conn: r.conn,
       bufWriter: r.w,
       bufReader: r.r,
       headers: r.headers,
     });
-    return hostScript(sock, this.#compileCache.get(hash)!);
+    if (!this.#compileCache.has(hash)) {
+      sock.send('"--FATAL"Please close this terminal window.');
+      return sock.close();
+    }
+    else {
+      return hostScript(sock, this.#compileCache.get(hash)!);
+    }
   }
 }
 

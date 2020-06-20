@@ -203,6 +203,7 @@ export interface CompilationResult {
   source: string;
   output: string;
   errors: CompilationError[];
+  programName: string;
 }
 
 export function compileSource(sourceCode: string): CompilationResult {
@@ -231,5 +232,6 @@ export function compileSource(sourceCode: string): CompilationResult {
     source: sourceCode,
     output: objCode,
     errors: errors,
+    programName: program.identifier,
   };
 }

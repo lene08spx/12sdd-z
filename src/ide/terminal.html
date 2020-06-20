@@ -2,20 +2,21 @@
 <!-- Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0 -->
 <html>
 <head>
-  <title>Zed-Edit - Execute</title>
-  <link href="./zed-edit.css" rel="stylesheet">
+  <title>Zed Terminal</title>
   <meta charset="utf-8">
-  <script src="./zed-ide.js" type="text/javascript"></script>
+  <link href="./zed.css" rel="stylesheet">
 </head>
 <body>
-  <header id="execute-header">
-    <h1>fibonacci.z</h1>
+  <header id="terminal-header">
+    <h1 id="terminal-prog-name"></h1>
   </header>
-  <main id="execute-main">
-    <div id="execute-output"><span id="execute-output-text"></span><span id="execute-output-caret"></span></div>
-    <input id="execute-input" type="text" spellcheck="false">
-    <button id="execute-enter" onclick="sendInput()">Enter</button>
+  <main id="terminal-main">
+    <div id="terminal-output"><span id="terminal-output-text"></span></div>
+    <input id="terminal-input" type="text" spellcheck="false">
+    <span id="terminal-caret">&gt;</span>
+    <button id="terminal-enter" onclick="sendInput()">Enter</button>
   </main>
-  <script>connectProcess()</script>
+  <script src="./zed-ide.js"></script>
+  <script>connectProcess();document.getElementById("terminal-input").focus();</script>
 </body>
 </html>
