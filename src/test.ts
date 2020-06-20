@@ -1,7 +1,7 @@
 // Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
 
 import { assertEquals, assertThrows } from "../lib/deno_std/testing/asserts.ts";
-import { lex, Token } from "./lex.ts";
+import { lex, Token } from "./compiler/lex.ts";
 import {
   ZedVariable,
   ZedString,
@@ -20,7 +20,7 @@ import {
   TokenArray,
   ParserError,
   syntaxTests,
-} from "./parse.ts";
+} from "./compiler/parse.ts";
 
 Deno.test("lex", ()=>{
   assertEquals(lex(`PROG HI\nENDPROG`), [

@@ -3,7 +3,7 @@
 const allNewline = /(\r\n|[\n\v\f\r\x85\u2028\u2029])/g;
 const zedTokenRules = {
   "keyword": /(?<keyword>\b(?:PROG|ENDPROG|DO|ENDDO|OUT|IN|IF|OTHERWISE|ENDIF|SWITCH|ENDSWITCH|FOR|FROM|TO|BY|ENDFOR|WHEN|ENDWHEN|REPEAT|UNTIL|ENDREPEAT)\b)/,
-  "operator": /(?<operator>\+|-|\*|\/|>=|<=|>|<|==|&&|\|\||!|:|\[|\]|=)/,
+  "operator": /(?<operator>\+|-|\*|\/|>=|<=|>|<|==|&&|\|\||!|:|\[|\]|=|%)/,
   "string": /(?<string>"[ !#-~]*")/,
   "number": /(?<number>\b\d+(?:\.\d+)?\b)/,
   "variable": /(?<variable>\b[A-Z]\d+\b)/,

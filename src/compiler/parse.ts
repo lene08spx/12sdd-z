@@ -4,7 +4,7 @@ import { Token, TokenType } from "./lex.ts";
 
 // TODO->Assert minimum required tokens to help alleviate unexpected encountering of EndOfTokens Parser errors.
 
-const mathematicalOperators = ["+","-","*","/"] as const;
+const mathematicalOperators = ["+","-","*","/","%"] as const;
 const logicalOperators = ["&&","||"] as const;
 const relationalOperators = [">=","<=",">","<","=="] as const;
 
@@ -60,7 +60,7 @@ export const syntaxTests = {
   invert: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["!"]),
   endOfStatement: new SyntaxTest(errorHandlers.expectedToken, ["operator"], [":"]),
   statement: new SyntaxTest(errorHandlers.expectedToken, ["operator","keyword"], [
-    "=", "DO", "OUT", "IF", "SWITCH", "FOR", "WHEN", "REPEAT"
+    "=", /*"DO",*/ "OUT", "IF", "SWITCH", "FOR", "WHEN", "REPEAT"
   ]),
   assign: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["="]),
   PROG: new SyntaxTest(errorHandlers.expectedToken, ["keyword"], ["PROG"]),
@@ -314,6 +314,7 @@ export class ZedCodeBlock {
         else if (ZedMultiwaySelection.check(t.peek())) {
           const structure = new ZedMultiwaySelection(t);
           this.statements.push(structure);
+          this.errors.push(...structure.errors);
           for (let [_, block] of structure.whenValueThenCode)
             this.errors.push(...block.errors);
         }
@@ -427,18 +428,39 @@ export class ZedBinarySelection {
   }
 }
 
+// need to hold its own errors to be appened up further
 export class ZedMultiwaySelection {
   variable: ZedVariable;
   whenValueThenCode: [(ZedNumber|ZedString),ZedDoBlock][] = [];
+  errors: ParserError[] = [];
   constructor(t: TokenArray) {
+    let skipToNextWhen = false;
     t.read(syntaxTests.SWITCH);
     this.variable = t.readVariable();
     while (!t.check(syntaxTests.ENDSWITCH)) {
-      t.read(syntaxTests.WHEN);
-      this.whenValueThenCode.push([
-        t.readValue(),
-        new ZedDoBlock(t),
-      ]);
+      if (t.check(syntaxTests.WHEN)) {
+        t.read(syntaxTests.WHEN);
+        skipToNextWhen = false;
+      }
+      else if (skipToNextWhen) {
+        t.advance();
+        t.assertPeek();
+      }
+      else {
+        try {
+          this.whenValueThenCode.push([
+            t.readValue(),
+            new ZedDoBlock(t),
+          ]);
+        } catch (e) {
+          if (e instanceof UnexpectedEndOfProgram)
+            throw e;
+          else {
+            this.errors.push(e);
+            skipToNextWhen = true;
+          }
+        }
+      }
     }
     t.read(syntaxTests.ENDSWITCH);
   }

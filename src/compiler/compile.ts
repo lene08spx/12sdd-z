@@ -50,6 +50,8 @@ def zedAssign(target, value, operator):
     return value.join(list(target))
    elif operator == '/':
     return target.replace(value,'',1)
+   elif operator == '%':
+    return ''.join(set(target)+set(value))
   elif type(value) == int or type(value) == float:
    if operator == '+':
     return target+(" "*int(value))
@@ -60,6 +62,8 @@ def zedAssign(target, value, operator):
    elif operator == '/':
     if value==0: return math.nan
     else: return target[0:len(target)/value]
+   elif operator == '%':
+    return len(target)%value
  # integer
  elif type(target) == int or type(target) == float:
   if type(value) == str:
@@ -72,6 +76,8 @@ def zedAssign(target, value, operator):
    elif operator == '/':
     if len(value)==0: return math.nan
     else: return target / len(value)
+   elif operator == '%':
+    return target % len(value)
   elif type(value) == int or type(value) == float:
    if operator == '+':
     return target + value
@@ -82,6 +88,8 @@ def zedAssign(target, value, operator):
    elif operator == '/':
     if value==0: return math.nan
     else: return target / value
+   elif operator == '%':
+    return target % value
 
 `;
 
@@ -94,26 +102,26 @@ function compileBlock(code: ZedCodeBlock, indentLevel: number): string {
   let out = "";
   for (let line of code.statements) {
     if (line instanceof ZedOutput)
-      out += compileOutput(line, indentLevel+1);
+      out += compileOutput(line, indentLevel);
     else if (line instanceof ZedAssignment)
-      out += compileAssignment(line, indentLevel+1);
+      out += compileAssignment(line, indentLevel);
     else if (line instanceof ZedPreTestLoop)
-      out += compilePreTest(line, indentLevel+1);
+      out += compilePreTest(line, indentLevel);
     else if (line instanceof ZedPostTestLoop)
-      out += compilePostTest(line, indentLevel+1);
+      out += compilePostTest(line, indentLevel);
     else if (line instanceof ZedForLoop)
-      out += compileForLoop(line, indentLevel+1);
+      out += compileForLoop(line, indentLevel);
     else if (line instanceof ZedBinarySelection)
-      out += compileBinarySelection(line, indentLevel+1);
+      out += compileBinarySelection(line, indentLevel);
     else if (line instanceof ZedMultiwaySelection)
-      out += compileMultiwaySelection(line, indentLevel+1);
+      out += compileMultiwaySelection(line, indentLevel);
     out += "\n";
   }
   return out;
 }
 
 function compileOutput(struct: ZedOutput, indentLevel: number): string {
-  return indent(indentLevel)+`print(${struct.promptParams.items.join(',')},sep='')`;
+  return indent(indentLevel)+`print(${[...struct.promptParams.items,''].join(',')}sep='')`;
 }
 
 function compileAssignment(struct: ZedAssignment, indentLevel: number): string {
@@ -152,7 +160,7 @@ function compilePreTest(struct: ZedPreTestLoop, indentLevel: number): string {
 }
 
 function compilePostTest(struct: ZedPostTestLoop, indentLevel: number): string {
-  return indent(indentLevel)+`while True:\n${compileBlock(struct.code, indentLevel+1)}if ${compileCondition(struct.condition)}:break`;
+  return indent(indentLevel)+`while True:\n${compileBlock(struct.code, indentLevel+1)}${indent(indentLevel+1)}if ${compileCondition(struct.condition)}:\n${indent(indentLevel+2)}break`;
 }
 
 function compileForLoop(struct: ZedForLoop, indentLevel: number): string {
@@ -163,18 +171,18 @@ function compileBinarySelection(struct: ZedBinarySelection, indentLevel: number)
   let out = indent(indentLevel)+`if ${compileCondition(struct.conditions[0][0]!)}:\n${compileBlock(struct.conditions[0][1], indentLevel+1)}`;
   for (let i = 1; i < struct.conditions.length; i++) {
     if (struct.conditions[i][0] !== null)
-      out += `else if ${compileCondition(struct.conditions[i][0]!)}:\n${compileBlock(struct.conditions[i][1], indentLevel+1)}`;
+      out += indent(indentLevel)+`elif ${compileCondition(struct.conditions[i][0]!)}:\n${compileBlock(struct.conditions[i][1], indentLevel+1)}`;
     else 
-      out += `else:\n${compileBlock(struct.conditions[0][1], indentLevel+1)}`;
+      out += indent(indentLevel)+`else:\n${compileBlock(struct.conditions[i][1], indentLevel+1)}`;
   }
   return out;
 }
 
 function compileMultiwaySelection(struct: ZedMultiwaySelection, indentLevel: number): string {
-  if (struct.whenValueThenCode.length < 0) return '';
+  if (struct.whenValueThenCode.length < 1) return '';
   let out = indent(indentLevel)+`if ${struct.variable} == ${struct.whenValueThenCode[0][0].toString()}:\n${compileBlock(struct.whenValueThenCode[0][1], indentLevel+1)}`;
   for (let i = 1; i < struct.whenValueThenCode.length; i++)
-    out += `else if ${struct.variable} == ${struct.whenValueThenCode[i][0]}:\n${compileBlock(struct.whenValueThenCode[i][1], indentLevel+1)}`;
+    out += indent(indentLevel)+`elif ${struct.variable} == ${struct.whenValueThenCode[i][0]}:\n${compileBlock(struct.whenValueThenCode[i][1], indentLevel+1)}`;
   return out;
 }
 

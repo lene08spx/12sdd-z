@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0 -->
+<html>
+<head>
+  <title>Zed Help - Language</title>
+  <meta charset="utf-8">
+  <link href="./zedman.css" rel="stylesheet">
+  <script src="./zed-ide.js"></script>
+</head>
+<body onload="highlightCodeElementChildren(document.body)">
+<header>
+<h1>The Zed Programming Language</h1>
+</header>
+<main>
+
+<h1>What is a Program?</h1>
+<pre><code>
+PROG Program_Name
+  instruction:
+  instruction:
+ENDPROG
+</code></pre>
+
+<hr>
+
+<h1>Instruction Sequence</h1>
+<p>Assignment, Output, WHEN, REPEAT, FOR, IF, SWITCH</p>
+
+<hr>
+
+<h1>Assignment</h1>
+<pre><code>
+= A1 "Hello, World!":
+= B1 42:
+= C1 IN["What's your name? "]:
+</code></pre>
+
+<hr>
+
+<h1>Output</h1>
+<pre><code>
+OUT["Hello, World"]:
+</code></pre>
+
+<hr>
+
+<h1>WHEN loop</h1>
+<pre><code>
+= I1 0:
+WHEN < I1 9
+  DO
+    = I1 1+:
+    OUT[I1]:
+  ENDDO
+ENDWHEN
+</code></pre>
+
+<hr>
+
+<h1>REPEAT loop</h1>
+<pre><code>
+  = I1 0:
+  REPEAT
+    DO
+      = I1 1+:
+      OUT[I1]:
+    ENDDO
+    UNTIL > I1 9
+  ENDWHEN
+</code></pre>
+
+<hr>
+
+<h1>FOR loop</h1>
+<pre><code>
+FOR I1 FROM 1 TO 10 BY 1
+  DO
+    OUT[I1]:
+  ENDDO
+ENDFOR
+</code></pre>
+
+<hr>
+
+<h1>IF statement</h1>
+<pre><code>
+
+</code></pre>
+
+</main>
+</body>
+</html>

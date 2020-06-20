@@ -39,7 +39,7 @@ export class IDE {
   }
   async launchWindow() {
     const proc = Deno.run({
-      cmd: ["cmd", "/C", "start", "", `http://localhost:${this.#port}/editor.html`],
+      cmd: ["cmd", "/C", "start", "", `http://localhost:${this.#port}/zeditor.html`],
       stdin: "null", stdout: "null", stderr: "null",
     });
     await proc.status();

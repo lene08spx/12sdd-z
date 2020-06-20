@@ -19,19 +19,12 @@
   --theme-font3: 15px Cascadia;
   --theme-editor-caret: #000000;
   --theme-editor-text-colour: #000000;
-  --theme-editor-text-style: italic;
   --theme-editor-string-colour: #11aa11;
-  --theme-editor-string-style: normal;
   --theme-editor-number-colour: #cf7000;
-  --theme-editor-number-style: normal;
   --theme-editor-keyword-colour: #0066aa;
-  --theme-editor-keyword-style: normal;
   --theme-editor-operator-colour: #000000;
-  --theme-editor-operator-style: italic;
   --theme-editor-variable-colour: #bb0000;
-  --theme-editor-variable-style: normal;
   --theme-editor-identifier-colour: #000000;
-  --theme-editor-identifier-style: normal;
   --theme-editor-comment-colour: #008844;
   --theme-editor-comment-style: italic;
   --theme-editor-error: #ff000080;
@@ -66,7 +59,7 @@ body {
   grid-template-columns: minmax(0, 1fr);
   margin: 0 auto;
   min-width: 650px;
-  width: calc(100% * 0.4);
+  width: calc(100% * 0.6);
   height: 100%;
   min-height: 100%;
 }
@@ -248,28 +241,22 @@ main {
 }
 
 .theme-editor-keyword {
-  font-style: var(--theme-editor-keyword-style);
   color: var(--theme-editor-keyword-colour);
   text-shadow:0px 0px 1px var(--theme-editor-keyword-colour);
 }
 .theme-editor-string {
-  font-style: var(--theme-editor-string-style);
   color: var(--theme-editor-string-colour);
 }
 .theme-editor-number {
-  font-style: var(--theme-editor-number-style);
   color: var(--theme-editor-number-colour);
 }
 .theme-editor-operator {
-  font-style: var(--theme-editor-operator-style);
   color: var(--theme-editor-operator-colour);
 }
 .theme-editor-variable {
-  font-style: var(--theme-editor-variable-style);
   color: var(--theme-editor-variable-colour);
 }
 .theme-editor-identifier {
-  font-style: var(--theme-editor-identifier-style);
   color: var(--theme-editor-identifier-colour);
   text-shadow: 0px 0px 1px var(--theme-editor-identifier-colour);
 }

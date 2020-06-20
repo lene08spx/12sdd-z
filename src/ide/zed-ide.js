@@ -11,9 +11,17 @@ const sourceMain = document.getElementById('editor-main');
 const $ = document.querySelector.bind(document);
 let socket = null;
 
+const pageStorage = window["localStorage"];
+if (sourceMain !== null) {
+  window.addEventListener("load",e=>{
+    sourceCode.value = pageStorage.getItem("userCode");
+    updateCodePreview();
+  });
+}
+
 const zedTokenRules = {
   "keyword": /(?<keyword>\b(?:PROG|ENDPROG|DO|ENDDO|OUT|IN|IF|OTHERWISE|ENDIF|SWITCH|ENDSWITCH|FOR|FROM|TO|BY|ENDFOR|WHEN|ENDWHEN|REPEAT|UNTIL|ENDREPEAT)\b)/,
-  "operator": /(?<operator>\+|-|\*|\/|>=|<=|>|<|==|&&|\|\||!|:|\[|\]|=)/,
+  "operator": /(?<operator>\+|-|\*|\/|>=|<=|>|<|==|&&|\|\||!|:|\[|\]|=|%)/,
   "string": /(?<string>"[ !#-~]*")/,
   "number": /(?<number>\b\d+(?:\.\d+)?\b)/,
   "variable": /(?<variable>\b[A-Z]\d+\b)/,
@@ -135,7 +143,11 @@ async function editorOpen(){
 }
 
 async function editorSave(){
-  const filename = prompt("Program Title:", "myprogram");
+  const compileResult = await op('compile', sourceCode.value);
+  let saveName = "myprogram";
+  if (compileResult.success && compileResult.programName)
+    saveName = compileResult.programName;
+  const filename = prompt("Program Title:", saveName);
   if (filename == null || filename == "") {
     if (filename == "") alert("Please enter a filename.");
     return;
@@ -150,7 +162,10 @@ async function editorSave(){
 async function editorCompile(){
   const result = await op('compile', sourceCode.value);
   if (!result.success) return alert("Compilation failed; check and correct errors, then try again.");
-  const filename = prompt("Program Title:", "myprogram");
+  let saveName = "myprogram";
+  if (result.success && result.programName)
+    saveName = result.programName;
+  const filename = prompt("Program Title:", saveName);
   if (filename == null || filename == "") {
     if (filename == "") alert("Please enter a filename.");
     return;
@@ -203,7 +218,7 @@ if (sourceCode !== null) sourceCode.addEventListener("keydown", function(e){
 });
 
 async function updateCodeErrors(){
-  console.log("2");
+  //console.log("2");
   const compileResult = await op('compile', sourceCode.value);
   for (let i=0; i<currentTokens.length; i++) {
     const ele = document.getElementById(`tok${i}`);
@@ -235,6 +250,7 @@ function htmlEntities(str) {
 }
 
 function updateCodePreview() {
+  pageStorage.setItem("userCode", sourceCode.value);
   needToRecheckErrors = true;
   compileTimer.reset();
   sourceCode.style.width = "";
@@ -253,6 +269,25 @@ function updateCodePreview() {
   }
   text = "<span>"+text.replace(/\n/g, " </span><span>")+"</span><span id='editor-end-of-tokens-error'></span>";
   sourceHighlight.innerHTML = text;
+}
+
+/** @param {HTMLBodyElement} b */
+function highlightCodeElementChildren(b){
+  const eles = b.getElementsByTagName("code");
+  for (let e of eles) {
+    let text = e.textContent;
+    if (text[0] === '\n') text = text.slice(1);
+    const toks = lex(text);
+    toks.reverse();
+    for (let t of toks) {
+      text = text.slice(0,t.absolutePos)+
+        `<span class="theme-editor-${t.type}">`+
+        htmlEntities(t.value)+`</span>`+
+        text.slice(t.absolutePos+t.value.length);
+    }
+    text = "<span>"+text.replace(/\n/g, " </span><span>")+"</span>";
+    e.innerHTML = text;
+  }
 }
 
 const progName = document.getElementById("terminal-prog-name");

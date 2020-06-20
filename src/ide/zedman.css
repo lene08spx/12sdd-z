@@ -1,0 +1,117 @@
+/* Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0 */
+
+@font-face {
+  font-family: Cascadia;
+  src: url("./CascadiaMono.ttf");
+}
+
+*,*::before,*::after{box-sizing:inherit;}
+:root {
+  --theme-border-width: 3px;
+  --theme-border-colour: black;
+  --theme-border: 3px solid black;
+  --theme-colour-bg1: #fff;
+  --theme-colour-bg2: #ddd;
+  --theme-colour-bg3: #8fcfff;
+  --theme-colour-fg1: #000000;
+  --theme-font1: 20px Cascadia;
+  --theme-font2: 17px Cascadia;
+  --theme-font3: 15px Cascadia;
+  --theme-editor-caret: #000000;
+  --theme-editor-text-colour: #000000;
+  --theme-editor-string-colour: #11aa11;
+  --theme-editor-number-colour: #cf7000;
+  --theme-editor-keyword-colour: #0066aa;
+  --theme-editor-operator-colour: #000000;
+  --theme-editor-variable-colour: #bb0000;
+  --theme-editor-identifier-colour: #000000;
+  --theme-editor-comment-colour: #008844;
+  --theme-editor-comment-style: italic;
+  --theme-editor-error: #ff000080;
+  box-sizing: border-box;
+  background-color: var(--theme-bg1);
+  color: var(--theme-colour-fg1);
+  font: var(--theme-font1);
+}
+
+body {
+  margin: 0 auto;
+  min-width: 650px;
+  width: calc(100% * 0.6);
+}
+
+header {
+  display: grid;
+  grid-auto-flow: column;
+  border: var(--theme-border);
+  background-color: var(--theme-colour-bg2);
+  user-select: none;
+  height: 40px;
+}
+
+header > h1 {
+  margin: auto;
+  font: var(--theme-font1);
+  font-weight: bold;
+  grid-row-start: 1;
+}
+
+main {
+  border: var(--theme-border);
+  border-top: none;
+}
+
+main > pre {
+  border: 2px solid var(--theme-colour-bg2);
+  border-radius: 5px;
+  padding: 5px;
+  margin: 5px 15px;
+}
+
+main > pre > code > span {
+  display: block;
+}
+
+main > h1 {
+  margin: 0;
+  padding: 5px 10px;
+  font: var(--theme-font1);
+  font-weight: bold;
+}
+
+main > h2 {
+  margin: 0;
+  font: var(--theme-font2);
+  font-weight: bold;
+}
+
+main > p {
+  margin: 0;
+  padding: 5px 15px;
+  font: var(--theme-font3);
+}
+
+.theme-editor-keyword {
+  color: var(--theme-editor-keyword-colour);
+  text-shadow:0px 0px 1px var(--theme-editor-keyword-colour);
+}
+.theme-editor-string {
+  color: var(--theme-editor-string-colour);
+}
+.theme-editor-number {
+  color: var(--theme-editor-number-colour);
+}
+.theme-editor-operator {
+  color: var(--theme-editor-operator-colour);
+}
+.theme-editor-variable {
+  color: var(--theme-editor-variable-colour);
+}
+.theme-editor-identifier {
+  color: var(--theme-editor-identifier-colour);
+  text-shadow: 0px 0px 1px var(--theme-editor-identifier-colour);
+}
+.theme-editor-comment {
+  font-style: var(--theme-editor-comment-style);
+  color: var(--theme-editor-comment-colour);
+}
