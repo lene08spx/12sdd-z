@@ -58,7 +58,7 @@ def zedAssign(target, value, operator):
    elif operator == '/':
     return target.replace(value,'',1)
    elif operator == '%':
-    return ''.join(set(target)+set(value))
+    return ''.join(set(list(target))&set(list(value)))
   elif type(value) == int or type(value) == float:
    if operator == '+':
     return target+(" "*int(value))
@@ -70,7 +70,7 @@ def zedAssign(target, value, operator):
     if value==0: return math.nan
     else: return target[0:len(target)/value]
    elif operator == '%':
-    return len(target)%value
+    return target[0:len(target)%value]
  # integer
  elif type(target) == int or type(target) == float:
   if type(value) == str:

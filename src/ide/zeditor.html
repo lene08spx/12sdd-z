@@ -21,14 +21,15 @@
       <div class="menu-item">
         <span class="menu-title">Help</span>
         <div class="menu-list">
-          <a href="#" target="_blank">Editor</a>
-          <a href="#" target="_blank">Zed Lang</a>
+          <a href="./zedlang.html" target="_blank">Manual</a>
+          <a href="./zedlang.html#language-guide" target="_blank">Zed Lang</a>
+          <a href="./zedlang.html#editor-guide" target="_blank">Editor</a>
           <a href="#" target="_blank">About</a>
         </div>
       </div>
     </nav>
     <h1>The Zed Programming Language</h1>
-    <button onclick="compileAndRun()">▶</button>
+    <button title="Run your program." onclick="compileAndRun()">▶</button>
   </header>
   <main id="editor-main">
     <textarea id="editor-input" spellcheck="false" oninput="updateCodePreview()"></textarea>

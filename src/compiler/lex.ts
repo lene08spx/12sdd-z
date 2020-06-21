@@ -14,9 +14,9 @@ such as the line number and character position.
 /** An object mapping a RegExp pattern to a TokenType. */
 const zedTokenRules = {
   "keyword": /(?<keyword>\b(?:PROG|ENDPROG|DO|ENDDO|OUT|IN|IF|OTHERWISE|ENDIF|SWITCH|ENDSWITCH|FOR|FROM|TO|BY|ENDFOR|WHEN|ENDWHEN|REPEAT|UNTIL|ENDREPEAT)\b)/,
+  "number": /(?<number>-?\b\d+(?:\.\d+)?\b)/,
   "operator": /(?<operator>\+|-|\*|\/|>=|<=|>|<|==|&&|\|\||!|:|\[|\]|=|%)/,
   "string": /(?<string>"[ !#-~]*")/,
-  "number": /(?<number>\b\d+(?:\.\d+)?\b)/,
   "variable": /(?<variable>\b[A-Z]\d+\b)/,
   "identifier": /(?<identifier>\b[A-Za-z_]+\b)/,
   "comment": /(?<comment>#.*)/,

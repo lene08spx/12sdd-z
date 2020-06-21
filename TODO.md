@@ -1,8 +1,9 @@
 # To Do
 ## Compiler
 - [x] (Lex) Allow comments in Zed Source Code.
-- [ ] CHange allowable input characters
 - [x] On SWITCH WHEN fail until next WHEN
+- [x] Negative numbers.
+- [ ] WHEN BLOCK MUST SAY EXPECTED WHEN OR ENDSWITCH AFTER DO BLOCK
 ## IDE
 - [x] Open IDE
 - [x] IDE Ops
@@ -11,12 +12,11 @@
 - [x] Open .z source file
 - [x] IDE Editor designing
 - [x] IDE Compile/Export
-- [ ] .error class passthrough event
 - [x] cache current source code sessionstorage
 - [x] DEFAULT program save nave to PROG identifier
 ## Docs
-- [ ] Zed Lang Docs
-- [ ] Software Package Docs
+- [x] Zed Lang Docs
+- [x] Software Package Docs
 - [ ] Installation Manual (thorough)
 - [x] Zed Language License
 ## Release

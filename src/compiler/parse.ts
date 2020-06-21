@@ -59,16 +59,24 @@ const errorHandlers = {
   /** Message formatter regarding the absence of a Program Identifier. */
   expectedProgramIdentifier: function(t, tokenTypes, tokenValues) {
     return `Expected a program identifier instead of '${t.value}' at line ${t.line} char ${t.position}.`;
+  } as ErrorMessageFormatter,
+  /** Message formatter regarding the absence of a type, not worrying about values. */
+  expectedTokenType: function(t, tokenTypes, tokenValues) {
+    return `Expected ${tokenTypes} instead of '${t.value}' at line ${t.line} char ${t.position}.`;
+  } as ErrorMessageFormatter,
+  /** Message formatter regarding the absence of a type, not worrying about values. */
+  expectedEndOfStatement: function(t, tokenTypes, tokenValues) {
+    return `Expected end of statement ':' before '${t.value}' at line ${t.line} char ${t.position}.`;
   } as ErrorMessageFormatter
 } as const;
 
 /** Defined tests for all language features in Zed. */
 export const syntaxTests = {
   programIdentifier: new SyntaxTest(errorHandlers.expectedProgramIdentifier, ["identifier"]),
-  number: new SyntaxTest(errorHandlers.expectedToken, ["number"]),
-  variable: new SyntaxTest(errorHandlers.expectedToken, ["variable"]),
-  value: new SyntaxTest(errorHandlers.expectedToken, ["string", "number"]),
-  variableOrValue: new SyntaxTest(errorHandlers.expectedToken, ["variable","string","number"]),
+  number: new SyntaxTest(errorHandlers.expectedTokenType, ["number"]),
+  variable: new SyntaxTest(errorHandlers.expectedTokenType, ["variable"]),
+  value: new SyntaxTest(errorHandlers.expectedTokenType, ["string", "number"]),
+  variableOrValue: new SyntaxTest(errorHandlers.expectedTokenType, ["variable","string","number"]),
   parameterOpen: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["["]),
   parameterClose: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["]"]),
   parameterSeperator: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["+"]),
@@ -77,7 +85,7 @@ export const syntaxTests = {
   logicalOperator: new SyntaxTest(errorHandlers.expectedToken, ["operator"], [...logicalOperators]),
   relationalOperator: new SyntaxTest(errorHandlers.expectedToken, ["operator"], [...relationalOperators]),
   invert: new SyntaxTest(errorHandlers.expectedToken, ["operator"], ["!"]),
-  endOfStatement: new SyntaxTest(errorHandlers.expectedToken, ["operator"], [":"]),
+  endOfStatement: new SyntaxTest(errorHandlers.expectedEndOfStatement, ["operator"], [":"]),
   statement: new SyntaxTest(errorHandlers.expectedToken, ["operator","keyword"], [
     "=", /*"DO",*/ "OUT", "IF", "SWITCH", "FOR", "WHEN", "REPEAT"
   ]),

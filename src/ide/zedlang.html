@@ -2,141 +2,459 @@
 <!-- Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0 -->
 <html>
 <head>
-  <title>Zed Help - Language</title>
+  <title>The Zed Programming Language</title>
   <meta charset="utf-8">
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsEAAA7BAbiRa+0AAAEySURBVHhe7ZrLkQIxDAUHsiAUcthwyYFQCAOqp7Rby/83tmQ99UXMxXL3zVWspgt2+8PRfqbmZ7uZ3dfzlzAVwKYsFcCmLBXApiwVwKYsFcCmLBXAphS/DyG4eg160/o1+l8eQgXoLQ9hAnjIQ4gAXvLgHsBTHlwDeMuDW4AI8uASIIo8dA8QSR66BogmD90CRJSHLgGiykPzAJHloWmA6PLQLMAI8tAkwCjysHiAkeRh0cNGk4fFDhxRHhY5dFR5+PrgkeXhq8NHl4ePF2SQh4+WZJGHtxdlkoe3lmWTh5cXZpSHl5ZmlYenizPLw8Pl2eXh7gUU5OHmJVTk4eoiSvJwdhk1efi7kKI8zJdSlYdVa/no1N/kbMpSAWzKUgFsylIBbMpSAWzKUgFsyiIeYJpOfBWYW+IkEVYAAAAASUVORK5CYII=">
   <link href="./zedman.css" rel="stylesheet">
   <script src="./zed-ide.js"></script>
 </head>
-<body onload="highlightCodeElementChildren(document.body)">
+<body>
 <header>
-<h1>The Zed Programming Language</h1>
+  <img src="./logo.png">
+  <h1 style="text-align:center;">
+    Software Design and Development<br>
+    Major Project 2020<br><br>
+    <em>Oliver Lenehan</em>
+  </h1>
 </header>
 <main>
-
-<h1>What is a Program?</h1>
+  <hr>
+  <section>
+    <h1 id="introduction">Introduction</h1>
+    <p>
+      The Zed Programming Language is a simple programming language
+      that compiles to Python. It was created as an exercise in
+      building a functioning compiler, and an Interactive Development
+      Environment.
+    </p><p>
+      The whole environment is self-contained, and is a simple
+      one-click-to-run package.
+    </p>
+  </section>
+  <hr>
+  <section>
+    <h1 id="license">License</h1>
+    <p>
+      Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
+    </p><p>
+      This program is free software: you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+    </p><p>
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+    </p><p>
+      See the <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank">GNU General Public License Version 3</a> for the full license.
+    </p>
+  </section>
+  <hr>
+  <section>
+    <h1 id="table-of-contents">Table of Contents</h1>
+    <ul>
+      <li><a href="#installation">Installation</a></li>
+      <li><a href="#language-guide">Language Guide</a></li>
+      <ul>
+        <li><a href="#your-first-program">Your First Program</a></li>
+        <li><a href="#what-makes-a-zed-program">What makes up a Zed Program?</a></li>
+        <li><a href="#out-statement">OUT Statement</a></li>
+        <li><a href="#assign-statement">Assignment Statement</a></li>
+        <li><a href="#when-loop">WHEN Loop</a></li>
+        <li><a href="#repeat-loop">REPEAT Loop</a></li>
+        <li><a href="#for-loop">FOR Loop</a></li>
+        <li><a href="#if-selection">IF Selection</a></li>
+        <li><a href="#switch-selection">SWITCH Selection</a></li>
+        <li><a href="#code-comments">Code Comments</a></li>
+        <li><a href="#logical-conditions">Logical Conditions</a></li>
+        <li><a href="#comparative-conditions">Comparative Conditions</a></li>
+      </ul>
+      <li><a href="#example-programs">Example Programs</a></li>
+      <ul>
+        <li><a href="#example-fizzbuzz">FizzBuzz</a></li>
+        <li><a href="#example-fibonacci">Fibonacci</a></li>
+      </ul>
+      <li><a href="#editor-guide">Zeditor Guide</a></li>
+      <ul>
+        <li><a href="#code-editor">Code Editor</a></li>
+        <li><a href="#terminal">Terminal</a></li>
+      </ul>
+    </ul>
+  </section>
+  <hr>
+  <section>
+    <h1 id="installation">Installation</h1>
+    <p>
+      The Zed Programming Language Interactive Development Environment is designed to be
+      easy to set up. The software package comes ready in a compressed-zip folder.
+      Simply extract the zip folder anywhere on your computer, 
+      and run the <strong><em>zed.exe</em></strong> binary. The editor should then open.
+    </p><p>
+      If it does not start, navigate to <a href="http://localhost:2020/zeditor.html" target="_blank">http://localhost:2020/zeditor.html</a>.
+    </p><p>
+      Zed has been tested to work on Windows&nbsp;10&nbsp;v1903, with Google&nbsp;Chrome&nbsp;v83 as the default browser.<br>
+      Source code files are tested to be recognised if they use Windows&nbsp;(CRLF) or Linux&nbsp;(LF) line endings.<br>
+      TCP Port 2020 must be available for the IDE to start.
+    </p><p>
+      Zed uses the following dependencies internally (which do not need to be installed):
+      Deno&nbsp;(v1.1.0), Python&nbsp;3&nbsp;(v3.8.3) and the Deno&nbsp;Standard&nbsp;Library&nbsp;(v0.57.0).
+    </p><p>
+      Included alongside the zed.exe binary is this manual, "The Zed Programming Language",
+      and a copy of the software licenses for Zed and any other software used as a dependency.
+      <br>
+      Also included are relevant documents to the Software Assignment: Requirements Report,
+      Design Report, Evalutaion Report, and Log Book.
+    </p><p>
+      The Zed Compiler produces Python 3 files as "Object Code". To be able to run them
+      independently of the software package, you must have Python 3 installed on your system.<br>
+      It is important to note, that Zed is a fully self-contained software package, and as such
+      does not need the user to install any other programs for it to function correctly.
+    </p>
+  </section>
+  <hr>
+  <section>
+    <h1 id="language-guide">Language Guide</h1>
+    <h2 id="your-first-program">Your First Program</h2>
 <pre><code>
-PROG Program_Name
+PROG Introduction
   OUT["Hello, World"]:
 ENDPROG
 </code></pre>
-
-<hr>
-
-<h1>Instruction Sequence</h1>
-<p>Assignment, Output, WHEN, REPEAT, FOR, IF, SWITCH</p>
-
-<hr>
-
-<h1>Assignment</h1>
+    <h2 id="what-makes-a-zed-program">What makes up a Zed Program?</h2>
+    <p>
+      There are lots of components that make up the
+      Zed Programming Language. Most important of
+      them is the <code>PROG</code> declaration: this
+      marks the beginning and end of your program, and
+      also names your program (using A-Z a-z _). It contains a sequence of
+      statements ending with ':', or control structures
+      that are the logic of your program.
+    </p><p>
+      Zed has two statements: the <code>OUT[]:</code>
+      statement and the assignment statement (<code>&equals; A1 1:</code>) or (<code>&equals; A1 IN["Value: "]:</code>).
+      These are the basics of input and output in Zed.
+    </p><p>
+      Zed features five control structures: the <code>WHEN</code> loop,
+      the <code>REPEAT</code> loop, the <code>FOR</code> loop,
+      the <code>IF</code> selection and the <code>SWITCH</code> selection.
+    </p><p>
+      For performing mathematical operations, Zed features
+      five operators: plus (+), minus (-), multiply (*), divide (/) and modulus (%).
+      These are used at the end of assignment statements
+      on variables that already exist, e.g. <code>&equals; A1 2 /:</code> to
+      divide A1 by 2.
+    </p><p>
+      <code>IF</code> selections, <code>WHEN</code> loops and
+      <code>REPEAT</code> loops all use conditions to determine how they run.
+      There are five comparison operators: less-than (&lt;), greater-than (&gt;),
+      less-than-or-equal-to (&lt;&equals;), greater-than-or-equal-to (&gt;&equals;), and is-equal (==).
+      Conditions follow a special order: &lt;operator&gt; &lt;value | condition&gt; &lt;value | condition&gt;.
+      Such an example is as thus: <code>== 1 1</code>, which would evaluate to a logical-TRUE.
+      Zed also provides three logical operators: logical-AND (&&), logical-OR (||),
+      and logical-NOT (!). Logical-NOT is special because it sits infront
+      of a condition to invert its truthiness. <code>! && == 1 1 == 2 2</code> combines
+      two is-equal conditons joined by logical-AND and inverted by logical-NOT, which means
+      that it evaluates to logical-FALSE;
+    </p><p>
+      Of course, none of the above features would be possible without
+      data to drive it. Data in Zed consists of Values (Numbers and Strings) and
+      Variables. A Number is either a postive or negative integer or decimal
+      (<code>42</code>,<code>-1</code>,<code>3.14</code> are all valid examples).
+      A String is simply a sentence or piece of text created by wrapping the text
+      (valid chars, excluding the double quotes; <code>" &excl;#$%&amp;'()*+,-./0123456789:;&lt;&equals;&gt;?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~"</code>) inside double-quotes ("),
+      e.g. <code>"What is the airspeed velocity of an unladen swallow?"</code>.
+      A Variable is used to store and hold data to be modified later, they can be identified
+      by the use of a single capital letter, followed by one or more digits, e.g. <code>P1</code>.
+    </p><p>
+      When documenting some code, comments come in handy to better descrbe certain decisions.
+      Zed includes comments, starting with a <code>#</code>, which turn the rest of the line into commentary written by the developer.
+    </p>
+    <h2 id="out-statement">OUT Statement</h2>
+    <p>
+      This statement, is a procedure used to output strings, numbers and variables to the screen.
+      Multiple items can be joined together using a plus (+).
+    </p>
 <pre><code>
-= A1 "Hello, World!":
-= B1 42:
-= C1 IN["What's your name? "]:
+PROG output
+  OUT["One"]:
+  OUT[2]:
+  = A1 42:
+  OUT["A1 is "+A1]:
+ENDPROG
 </code></pre>
-
-<hr>
-
-<h1>Output</h1>
+    <h2 id="assign-statement">Assignment Statement</h2>
+    <p>
+      This statement allows for user input, and for giving values to variables.
+      A simple assignment consists of a target variable, and an operand of either a
+      variable, number or string. Allowing user input of strings or numbers is as
+      simple as replacing the operand with an <code>IN[]</code> procedure, which takes
+      parameters as a prompt to the user.
+      Much like the <code>OUT[]</code> procedure, the <code>IN[]</code> procedure can also join multiple
+      variables, string and numbers together and use this as the prompt to the user.
+      Adding a mathematical operator (+,-,*,/,%) at the end performs an operation
+      on the target variable using the operand.
+    </p><p>
+      The operator has special applications which are shown in the following tables:
+    </p>
+    <table style="table-layout: fixed;">
+      <tr>
+        <th style="width: 30%;">Target Operand (+)</th>
+        <th>Result of Addition Operator</th>
+      </tr>
+      <tr>
+        <td>String String +</td>
+        <td>Joins two strings</td>
+      </tr>
+      <tr>
+        <td>String Number +</td>
+        <td>Adds <em>Operand</em> whitespaces after <em>Target</em></td>
+      </tr>
+      <tr>
+        <td>Number String +</td>
+        <td>Adds length of <em>Operand</em> to <em>Target</em></td>
+      </tr>
+      <tr>
+        <td>Number Number +</td>
+        <td>Adds two numbers</td>
+      </tr>
+    </table>
+    <table style="table-layout: fixed;">
+      <tr>
+        <th style="width: 30%;">Target Operand (-)</th>
+        <th>Result of Subtraction Operator</th>
+      </tr>
+      <tr>
+        <td>String String -</td>
+        <td>Removes all occurences of <em>Operand</em> from <em>Target</em></td>
+      </tr>
+      <tr>
+        <td>String Number -</td>
+        <td>Removes <em>Operand</em> characters from the end of <em>Target</em></td>
+      </tr>
+      <tr>
+        <td>Number String -</td>
+        <td>Subtracts length of <em>Operand</em> from <em>Target</em></td>
+      </tr>
+      <tr>
+        <td>Number Number -</td>
+        <td>Subtracts two numbers</td>
+      </tr>
+    </table>
+    <table style="table-layout: fixed;">
+      <tr>
+        <th style="width: 30%;">Target Operand (*)</th>
+        <th>Result of Multiplication Operator</th>
+      </tr>
+      <tr>
+        <td>String String *</td>
+        <td>Insert <em>Operand</em> between all characters in <em>Target</em></td>
+      </tr>
+      <tr>
+        <td>String Number *</td>
+        <td>Repeats <em>Target</em>, <em>Operand</em> times</td>
+      </tr>
+      <tr>
+        <td>Number String *</td>
+        <td>Multiply <em>Target</em> by length of <em>Operand</em></td>
+      </tr>
+      <tr>
+        <td>Number Number *</td>
+        <td>Multiplies two numbers</td>
+      </tr>
+    </table>
+    <table style="table-layout: fixed;">
+      <tr>
+        <th style="width: 30%;">Target Operand (/)</th>
+        <th>Result of Division Operator</th>
+      </tr>
+      <tr>
+        <td>String String /</td>
+        <td>Replace the first instance of <em>Operand</em> in <em>Target</em></td>
+      </tr>
+      <tr>
+        <td>String Number /</td>
+        <td>Split <em>Target</em> into <em>Operand</em> parts, and keep the first part.</td>
+      </tr>
+      <tr>
+        <td>Number String /</td>
+        <td>Divide <em>Target</em> by the length of <em>Operand</em></td>
+      </tr>
+      <tr>
+        <td>Number Number /</td>
+        <td>Divides two numbers</td>
+      </tr>
+    </table>
+    <table style="table-layout: fixed;">
+      <tr>
+        <th style="width: 30%;">Target Operand (%)</th>
+        <th>Result of Modulus Operator</th>
+      </tr>
+      <tr>
+        <td>String String %</td>
+        <td>Keep the characters in <em>Target</em> that also appear in <em>Operand</em></td>
+      </tr>
+      <tr>
+        <td>String Number %</td>
+        <td>Reduce the length of <em>Target</em> to <em>Target</em> modulus <em>Operand</em> characters long.</td>
+      </tr>
+      <tr>
+        <td>Number String %</td>
+        <td>Perform modulus of <em>Target</em> by the length of <em>Operand</em></td>
+      </tr>
+      <tr>
+        <td>Number Number %</td>
+        <td>Perform modulus of <em>Target</em> by <em>Operand</em></td>
+      </tr>
+    </table>
+    <p>
+      For the purposes of demonstration, each assignment is followed by an <code>OUT[]</code>
+      procedure to reveal the behaviour of the previous assignment.
+    </p>
 <pre><code>
-OUT["Hello, World"]:
+PROG assignment_example_one
+  = A1 1:
+  OUT["A1 is "+A1]:
+  = A1 2 +:
+  OUT["A1 is "+A1]:
+  = B1 A1:
+  OUT["B1 is "+B1]:
+  = C1 "Tree":
+  OUT["C1 is "+C1]:
+  = C1 2/:
+  OUT["C1 is "+C1]:
+  = D1 IN["Hello I'm Zed. What's your name? "]:
+  OUT["G'Day, "+D1]:
+  = E1 2:
+  = E1 IN["Mutiply 2 by "] *:
+  OUT["E1 is "+E1]:
+  = F1 9:
+  = F1 4 %:
+  OUT["F1 is "+F1]:
+ENDPROG
 </code></pre>
-
-<hr>
-
-<h1>WHEN loop</h1>
 <pre><code>
-= I1 0:
-WHEN < I1 9
-  DO
-    = I1 1+:
-    OUT[I1]:
-  ENDDO
-ENDWHEN
+PROG assignment_example_two
+  = A1 10:
+  OUT[A1]:
+  = A1 2+:
+  OUT[A1]:
+  = A1 3-:
+  OUT[A1]:
+  = A1 4*:
+  OUT[A1]:
+  = A1 6/:
+  OUT[A1]:
+  = A1 2%:
+  OUT[A1]:
+ENDPROG
 </code></pre>
-
-<hr>
-
-<h1>REPEAT loop</h1>
+    <h2 id="when-loop">WHEN loop</h2>
+    <p>
+      The <code>WHEN</code> loop allows the repetition of code found inside its <code>DO</code> block.
+      It will keep looping for as long as its condition evaluates to logical-TRUE.
+    </p>
 <pre><code>
-  = I1 0:
+PROG when_loop
+  = X1 0:
+  WHEN &lt; X1 10
+    DO
+      OUT[X1]:
+      = X1 1+:
+    ENDDO
+  ENDWHEN
+ENDPROG
+</code></pre>
+    <h2 id="repeat-loop">REPEAT loop</h2>
+    <p>
+      The <code>REPEAT</code> loop also allows the repetition of code found inside its <code>DO</code> block.
+      However, it will keep looping <code>UNTIL</code> its condition evaluates to logical-TRUE.
+    </p>
+<pre><code>
+PROG repeat_loop
+  = X1 0:
   REPEAT
     DO
-      = I1 1+:
-      OUT[I1]:
+      OUT[X1]:
+      = X1 1+:
     ENDDO
-    UNTIL > I1 9
-  ENDWHEN
+    UNTIL &gt; X1 9
+  ENDREPEAT
+ENDPROG
 </code></pre>
-
-<hr>
-
-<h1>FOR loop</h1>
+    <h2 id="for-loop">FOR loop</h2>
+    <p>
+      The <code>FOR</code> loop allows the repetition of code, and also provides a counter to keep track.
+      It uses the variable stated first to store the counter value. It starts at the number specified after
+      <code>FROM</code>, continues until it has reached <code>TO</code>, and will step each count using <code>BY</code>.
+    </p>
 <pre><code>
-FOR I1 FROM 1 TO 10 BY 1
-  DO
-    OUT[I1]:
-  ENDDO
-ENDFOR
-</code></pre>
-
-<hr>
-
-<h1>IF statement</h1>
-<pre><code>
-= X1 1:
-IF == X1 1
-  DO
-    OUT["ONE"]:
-  ENDDO
-OTHERWISE IF == X1 2
-  DO
-    OUT["TWO"]:
-  ENDDO
-OTHERWISE
-  DO
-    OUT["ANYTHING"]:
-  ENDDO
-ENDIF
-</code></pre>
-
-<hr>
-
-<h1>SWITCH statement</h1>
-<pre><code>
-= X1 "apple":
-SWITCH X1
-  WHEN "apple"
+PROG for_loop
+  FOR I1 FROM 1 TO 10 BY 1
     DO
-      OUT["Le Pomme"]:
+      OUT["FOR has counted to "+I1]:
     ENDDO
-  WHEN "orange"
-    DO
-      OUT["Le Citrus"]:
-    ENDDO
-ENDSWITCH
+  ENDFOR
+ENDPROG
 </code></pre>
-
-<hr>
-
-<h1>Operator Assignments</h1>
+  <h2 id="if-selection">IF Selection</h2>
+  <p>
+    The <code>IF</code> selection allows a block of code to be executed if the given condition evaluates to logical-TRUE.
+    If multiple tests and blocks of code are needed, it can be extended. The <code>OTHERWISE IF</code>
+    allows for another condition to be tested if the previous one evaluated to logical-FALSE.
+    The <code>OTHERWISE</code> allows a fallback block of code to be run if none of the previous
+    conditions were met. The only required block is the <code>IF</code>, the others are optional
+    and may be included afterwards, but the <code>OTHERWISE</code> must only come last.
+  </p>
 <pre><code>
-= A1 10:
-OUT[A1]:
-= A1 2+:
-OUT[A1]:
-= A1 3-:
-OUT[A1]:
-= A1 4*:
-OUT[A1]:
-= A1 6/:
-OUT[A1]:
-= A1 2%:
-OUT[A1]:
+PROG if_selection
+  IF && &gt;= N1 1 &lt;= N1 10
+    DO
+      OUT[N1+" is a good choice!"]:
+    ENDDO
+  OTHERWISE IF == N1 42
+    DO
+      OUT[N1+" is not in that range, but it is good number."]:
+    ENDDO
+  OTHERWISE
+    DO
+      OUT["Don't be silly! "+N1+" isn't between 1 and 10."]:
+    ENDDO
+  ENDIF
+ENDPROG
 </code></pre>
-
-<hr>
-
-<h1>Comparative Conditions</h1>
+  <h2 id="switch-selection">SWITCH Selection</h2>
+  <p>
+    The <code>SWITCH</code> selection allows the given variable to
+    be tested for equality against many values.
+  </p>
+<pre><code>
+PROG switch_selection
+  = S1 IN["Choose a dog, cat, or rabbit: "]:
+  SWITCH S1
+    WHEN "dog"
+      DO
+        OUT["Woof Woof!"]:
+      ENDDO
+    WHEN "cat"
+      DO
+        OUT["Meow!"]:
+      ENDDO
+    WHEN "rabbit"
+      DO
+        OUT["Eheheh, what's up Doc!"]:
+      ENDDO
+  ENDSWITCH
+ENDPROG
+</code></pre>
+  <h2 id="code-comments">Code Comments</h2>
+<pre><code>
+PROG my_program
+  = A1 1: # Here we are assign the value 1 to A1
+  # next, we're gonna double it
+  = A1 2*:
+ENDPROG
+</code></pre>
+  <h2 id="comparative-conditions">Comparative Conditions</h2>
 <pre><code>
 &lt; 1 2:   # true
 &gt; 1 2:   # false
@@ -144,17 +462,139 @@ OUT[A1]:
 &gt;= 3 2:  # true
 == 1 1:  # true
 </code></pre>
-
-<hr>
-
-<h1>Logical Conditions</h1>
+  <h2 id="logical-conditions">Logical Conditions</h2>
 <pre><code>
 && == 1 1 == 0 1: # false
 || == 1 1 == 0 1: # true
 ! && == 1 1 == 0 1: # true
 ! || == 1 1 == 0 1: # false
 </code></pre>
+  </section>
+  <hr>
+  <section>
+    <h1 id="example-programs">Example Programs</h1>
+    <h2 id="example-fizzbuzz">FizzBuzz</h2>
+<pre><code>
+PROG FIZZBUZZ
+  = X3 1:
+  = X5 1:
+  = I1 1:
+  = M1 IN["MAX : "]:
+  WHEN <= I1 M1
+    DO
+      = O1 0:
+      IF && >= X5 5 >= X3 3
+        DO
+          OUT["FIZZ BUZZ"]:
+          = X3 0:
+          = X5 0:
+          = O1 1:
+        ENDDO
+      ENDIF
+      IF && >= X3 3 == O1 0
+        DO
+          OUT["FIZZ"]:
+          = X3 0:
+          = O1 1:
+        ENDDO
+      ENDIF
+      IF && >= X5 5 == O1 0
+        DO
+          OUT["BUZZ"]:
+          = X5 0:
+          = O1 1:
+        ENDDO
+      ENDIF
+      IF == O1 0
+        DO
+          OUT[I1]:
+        ENDDO
+      ENDIF
+      = X3 1 +:
+      = X5 1 +:
+      = I1 1 +:
+    ENDDO
+  ENDWHEN
+ENDPROG
 
+</code></pre>
+    <h2 id="example-fibonacci">Fibonnaci</h2>
+<pre><code>
+PROG FIBONACCI
+  = N1 IN["NO. OF TERMS : "]:
+  = C1 1:
+  = F0 0:
+  = F1 1:
+  = F2 1:
+  OUT[" F( 0 ) = 0"]:
+  WHEN <= C1 N1
+    DO
+      OUT[" F( "+C1+" ) = "+F2]:
+      = F2 0:
+      = F2 F0+:
+      = F2 F1+:
+      = F0 F1:
+      = F1 F2:
+      = C1 1 +:
+    ENDDO
+  ENDWHEN
+ENDPROG
+</code></pre>
+  </section>
+  <hr>
+  <section>
+    <h1 id="editor-guide">Zeditor Guide</h1>
+    <h2 id="code-editor">Code Editor</h2>
+    <h3>Menu Bar</h3>
+    <img src="menubar.png">
+    <p>
+      The menu bar provides navigation in the editor. Letting you interact with files,
+      find help in the manual, and run your program in the Terminal using the triangle icon on the right.
+    </p>
+    <h3>File Menu</h3>
+    <img src="file_menu.png">
+    <p>
+      The file menu contains functionality related to making programs.<br>
+      The <strong><em>New</em></strong> button creates a new, blank file.<br>
+      The <strong><em>Open</em></strong> button lets you opens an existing Zed source file.<br>
+      The <strong><em>Save</em></strong> button lets you save your current work to your computer.<br>
+      The <strong><em>Compile</em></strong> button compiles your Zed program to Python, and lets you save the result to your computer.<br>
+    </p>
+    <h3>Help Menu</h3>
+    <img src="help_menu.png">
+    <p>
+      The help menu lets you jump to sections in the manual.
+    </p>
+    <h3>Code</h3>
+    <img src="code.png">
+    <p>
+      The code editor lets you type out your Zed program. It automatically highlights
+      your code like the code snippets in the manual.
+    </p>
+    <img src="code_error.png">
+    <p>
+      The editor also shows you any errors in your code in realtime, highlighting them in red.
+      When you hover over an error, a tooltip is shown displaying the error message.<br>
+    </p>
+    <h2 id="terminal">Terminal</h2>
+    <img src="terminal.png">
+    <p>
+      The Terminal displays the output of your Zed program, and also serves as a way to submit user input.
+      The box with the "&gt;" is the input field. Typed text can be submitted by pressing Enter on your keyboard,
+      or by clicking the "Enter" button next to it.<br>
+      All program output is in black, and when the program is finished green text saying "Program Finished" will appear.
+    </p>
+    <img src="terminal_error.png">
+    <p>
+      If a runtime error occurs that causes the program to crash unexpectedly, output from the runtime environment will be
+      shown highlighted in red.
+    </p>
+  </section>
+  <hr>
 </main>
+<footer>
+  Copyright (C) 2020 - Oliver Lenehan - GNU GPLv3.0
+</footer>
+<script>highlightCodeElementChildren(document.body);</script>
 </body>
 </html>

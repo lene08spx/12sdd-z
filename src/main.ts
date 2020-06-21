@@ -42,7 +42,12 @@ export class IDE {
   /** Start the ide. */
   async run(): Promise<void> {
     (async()=>{for await (const r of this.#server) this.handleRequest(r)})();
-    this.launchWindow();
+    try {
+      this.launchWindow();
+    }
+    // catch the error so that even if cmd.exe doesnt want to start for some reason,
+    // the user can still open up the editor in their browser.
+    catch(e){}
     //this.#server.close();
   }
   /** launch the editor window */
