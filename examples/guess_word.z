@@ -1,0 +1,52 @@
+PROG guess_word
+  = W1 "alphabet": # the word being guessed
+  = W0 "": # the input guess storage
+  = A1 "": # currently guessed letters
+  = T1 10: # Tries remaining
+  OUT["Here's the word."]:
+  OUT["________"]:
+  WHEN && !== W0 W1 > T1 0
+    DO
+      OUT[]:
+      OUT[T1+" guesses remaining."]:
+      = G1 IN["Guess a letter: "]:
+      = G0 G1:  # copy guess
+  
+      # input length
+      = L0 0:
+
+      # if length > 1, we need just first letter
+      # set length var = guess length
+      = L0 G0+:
+      IF > L0 1
+        DO
+          # L0 is 1 less than length,
+          # so when subtracting we are left with 1 letter
+          = L0 1-:
+          # get one letter
+          = G0 L0-:
+        ENDDO
+      ENDIF
+
+      # get the first letter and put it in guessed
+      
+      = A1 G0+:
+
+      # copy word and reveal correct letters
+      = W0 W1:  # copy the word
+      = W0 A1%: # reveal the letters in the copy
+      OUT["Current Progress: "+W0]:
+      = T1 1-:
+    ENDDO
+  ENDWHEN
+  OUT[]:
+  IF == T1 0
+    DO
+      OUT["You took too many guesses!"]:
+    ENDDO
+  OTHERWISE
+    DO
+      OUT["You win!"]:
+    ENDDO
+  ENDIF
+ENDPROG

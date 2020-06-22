@@ -109,6 +109,7 @@ async function connectProcess() {
   // connect to the IDE server
   sock = new WebSocket(`ws://${location.hostname}:${location.port}/op/run?id=${hash}`);
   const output = document.getElementById("terminal-output-text");
+  const terminalMain = document.getElementById("terminal-output");
   let firstLine = true;
   // on program output
   sock.addEventListener("message", async e=>{
@@ -118,21 +119,25 @@ async function connectProcess() {
     if (txt.startsWith('\n\n\nFATAL')) {
       output.innerHTML += "<br><br><span class='error'>Runtime Errors Encounterd:<br>                          </span><br>"
       output.innerHTML += `<span class="error">${htmlEntities(txt.replace('\n\n\nFATAL',""))}</span><br>`;
+      terminalMain.scrollTop = terminalMain.scrollHeight;
     }
     else
       // output to the terminal text area.
       if (firstLine) {
         output.textContent += txt;
+        terminalMain.scrollTop = terminalMain.scrollHeight;
         firstLine = false;
       }
       else {
         output.textContent += "\n"+txt;
+        terminalMain.scrollTop = terminalMain.scrollHeight;
       }
   });
   // when the program is finished
   sock.addEventListener("close", e=>{
     document.getElementById("terminal-input").disabled = true;
-    output.innerHTML += "<span style='color:green;'>Program Finished</span>"
+    output.innerHTML += "<span style='color:green;'>Program Finished</span>";
+    terminalMain.scrollTop = terminalMain.scrollHeight;
   });
 }
 
@@ -142,6 +147,7 @@ async function sendInput() {
   const inputEle = document.getElementById("terminal-input");
   sock.send(inputEle.value);
   output.textContent += htmlEntities(inputEle.value);
+  output.scrollTop = output.scrollHeight;
   inputEle.value = "";
 }
 
