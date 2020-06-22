@@ -15,6 +15,7 @@ const pythonExecutable = decodeURI(parsePath(import.meta.url).dir.replace("file:
  * Acts as a host between the IDE terminal, 
  * and the currently executing script. */
 export async function hostScript(sock: WebSocket, script: CompilationResult) {
+  let totalBytesWritten = 0;
   /** Launch a python instance to run the program. */
   const proc = Deno.run({
     cmd: [pythonExecutable, "-c", script.output],
@@ -46,7 +47,13 @@ export async function hostScript(sock: WebSocket, script: CompilationResult) {
     try {
       // pipe the program to the IDE directly.
       for await (const out of Deno.iter(proc.stdout)) {
+        totalBytesWritten += out.length;
         await sock.send(decode(out));
+        // if we have written > 40KB close the socket
+        if (totalBytesWritten > 40*1024) {
+          await sock.send('\n\n\nFATAL'+'Program output exceeded 40KB.\n')
+          sock.close();
+        }
       }
     }
     // catch (e) stops fatal crashes when the socket is closed.

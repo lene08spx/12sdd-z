@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Z Programming Language - Development Log</title>
+	<title>Zed Dev Log</title>
+	<link rel="icon" href="../../src/ide/icon.png">
 	<style>
 		@font-face {
 			font-family: Cascadia;
@@ -10,6 +11,8 @@
 		body {
 			margin: 0 auto 50px auto;
 			max-width: 800px;
+			border: 3px solid black;
+			padding: 10px;
 		}
 		body > h1 {
 			text-align: center;
@@ -35,7 +38,11 @@
 			font-style: italic;
 		}
 		img {
-			max-width: 100%;
+			display: block;
+			margin: 5px auto;
+			width: 90%;
+			max-height: 500px;
+			object-fit: contain;
 		}
 	</style>
 </head>
@@ -50,6 +57,7 @@
 			with the Visual Studio Code IDE. The primary image required,
 			the 'Z' logo, was designed.
 		</p>
+		<img src="../../src/ide/logo.png">
 	</article>
 	<article>
 		<h1>T1W11</h1>
@@ -119,6 +127,7 @@
 			As a test of the compiler, a fizzbuzz program was successfully
 			written.
 		</p>
+		<img src="log-fizzbuzz.png">
 		<h2>16th April</h2>
 		<p>
 			Today focused on polishing the compiler some more. The Python
@@ -132,6 +141,9 @@
 			To further test the compiler, Modulo, Fibonnaci and Squares
 			programs were written and compiled and run successfully.
 		</p>
+		<img src="log-modulo.png">
+		<img src="log-fibonacci.png">
+		<img src="log-squares.png">
 	</article>
 	<article>
 		<h1>Hol.W2</h1>
@@ -231,13 +243,14 @@
 		<p>
 			<a href="https://www.freecodecamp.org/news/the-programming-language-pipeline-91d3f449c919/">Reading up on compiler</a>.
 			Refactor In/Out, Assignment, Condition Code, simplification and following the single fail per statement rule.<br>
-			Implementing Unit-Tests to test Zed Compiler without needing to compile a script.
+			Implementing Unit-Tests to test Zed Compiler without needing to compile a script. This was extremely valuable.
 		</p>
 	</article>
 	<article>
 		<h1>T2W7</h1>
 		<h2>13th June 2020</h2>
 		<p>
+			Research was done to better understand the intricacies of a compiler, and to understand the different phases. This was very valuable to beginning the re-write.
 			<a href="https://www.tutorialspoint.com/compiler_design/compiler_design_error_recovery.htm">How a compiler recovers.</a>
 		</p>
 	</article>
@@ -245,24 +258,50 @@
 		<h1>T2W8</h1>
 		<h2>15th June 2020</h2>
 		<p>
-			Refactoring Parser, enabling code to be cleaner and easier to read. Remove duplication of parsing string/number/variable.
+			Refactoring Parser, enabling code to be cleaner and easier to read. Remove duplication of parsing string/number/variable.<br>
+			The follow were of great help in including file functionality into the editor.
+			https://stackoverflow.com/questions/3582671/how-to-open-a-local-disk-file-with-javascript
+			https://stackoverflow.com/questions/13405129/javascript-create-and-save-file
 		</p>
-		<h2>19th June 2020</h2>
-		https://stackoverflow.com/questions/3582671/how-to-open-a-local-disk-file-with-javascript
-		https://stackoverflow.com/questions/13405129/javascript-create-and-save-file
-		
+		<h2>20th June 2020</h2>
+		<p>
+			Work was done on the usability of the editor, the Zed Programming Language manual was written,
+			code comments were modified to become clearer in` the compiler source code and they were also added as a feature in Zed.
+			Host.ts and Zed-Edit.js were created to further modularise code being used.
+		</p>
 	</article>
 	<article>
 		<h1>T2W9</h1>
 		<h2>22nd June 2020</h2>
 		<p>
-			Error: SWITCH WHEN allowing values between
+			A bug was encountered whereby a SWITCH WHEN was allowing values between the WHEN blocks that should
+			have been labelled as errors.
 		</p>
 		<img src="log-2020-06-22-switch_error.png">
+		<p>
+			Looking at the tokens list, it is expected that the output should follow the pattern of keyword, string, keyword, string ...<br>
+			But looking at the output below, it is clear that the "21" is not following a keyword. So something must be wrong.
+		</p>
 		<img src="log-2020-06-22-switch_error_tokens_listed.png">
+		<p>
+			Upon looking at the code, it was a messy while statement, that had logic all over the place.
+			The main issue was the skipToNextWhen to next when which was interacting unexpectedly with the condition in the javascript while loop. 
+			The fix was to simplify the loop logic, and keep any break conditions inside.
+		</p>
 		<img src="log-2020-06-22-switch_old_code.png">
+		<p>
+			The new code is visually much easier to follow, and it is clear what drives the decisions the parser makes.
+		</p>
 		<img src="log-2020-06-22-switch_new_code.png">
+		<p>
+			The correctly shown error, as a result of the fix, is below.
+		</p>
 		<img src="log-2020-06-22-switch_fixed.png">
+		<h2>Completion!</h2>
+		<p>
+			The project is now complete, and a documentation of the Zed Language and editor is provided in the manual,
+			"The Zed Programming Language".
+		</p>
 	</article>
 </body>
 </html>

@@ -58,10 +58,10 @@ def zedAssign(target, value, operator):
    elif operator == '/':
     return target.replace(value,'',1)
    elif operator == '%':
-    return ''.join(set(list(target))&set(list(value)))
+    return ''.join([letter if letter in value else '_' for letter in target])
   elif type(value) == int or type(value) == float:
    if operator == '+':
-    return target+(" "*int(value))
+    return target[int(value):]
    elif operator == '-':
     return target[0:-int(value)]
    elif operator == '*':

@@ -66,7 +66,7 @@ const errorHandlers = {
   } as ErrorMessageFormatter,
   /** Message formatter regarding the absence of a type, not worrying about values. */
   expectedEndOfStatement: function(t, tokenTypes, tokenValues) {
-    return `Expected end of statement ':' before '${t.value}' at line ${t.line} char ${t.position}.`;
+    return `Expected end of statement ':' after '${t.value}' at line ${t.line} char ${t.position}.`;
   } as ErrorMessageFormatter
 } as const;
 
@@ -139,6 +139,8 @@ export class TokenArray {
   peek(): Token | undefined { return this.#data[this.#index]; }
   /** Get the current position of the Parser head. */
   currentIndex(){ return this.#index; }
+  /** Gets the previous token. */
+  previous(){ return this.#data[this.#index-1]; }
   /** Peeks at the next token, but if the end of the program has been reached, throws. */
   assertPeek(){
     const tok = this.peek();
@@ -370,14 +372,14 @@ export class ZedCodeBlock {
           this.statements.push(new ZedOutput(t));
           // if there is no ':' throw an error
           if (!t.check(syntaxTests.endOfStatement))
-            this.errors.push(new ParserError(syntaxTests.endOfStatement, t.assertPeek()));
+            this.errors.push(new ParserError(syntaxTests.endOfStatement, t.previous()));
         }
         // if '=', make sure there is a :
         else if (t.check(syntaxTests.assign)) {
           this.statements.push(new ZedAssignment(t));
           // if there is no ':' throw an error
           if (!t.check(syntaxTests.endOfStatement))
-            this.errors.push(new ParserError(syntaxTests.endOfStatement, t.assertPeek()));
+            this.errors.push(new ParserError(syntaxTests.endOfStatement, t.previous()));
         }
         else if (ZedPreTestLoop.check(t.peek())) {
           const structure = new ZedPreTestLoop(t);

@@ -1,44 +1,54 @@
-PROG TESTZED
-
-  = A1 0:
-  WHEN < A1 10 DO
-    OUT["A1 : "+A1]:
-    = A1 1+:
-  ENDDO ENDWHEN
-
-  = A1 0:
-  REPEAT DO
-    = A1 1+:
+PROG counter
+  = B1 IN["Begin at:"]:
+  = E1 IN["End at"]:
+  = C1 B1:
+  = A1 "Test":
+  = D1 1: = D1 B1 +:
+  WHEN !== C1 E1
+    DO
+      OUT [C1]:
+      = A999 2:
+      OUT ["Label="+999+" "+A999]:
+      = C1 1 +:
     ENDDO
-    UNTIL >= A1 5
+  ENDWHEN
+
+  = F1 2:
+
+  REPEAT
+    DO
+      OUT["Repeat Until Loop"]:
+      = F1 1 -:
+    ENDDO
+    UNTIL <= F1 0
   ENDREPEAT
 
-  FOR A1 FROM 0 TO 8 BY 1 DO
-    OUT["FOR : "+A1]:
-  ENDDO ENDFOR
-
-  = A1 0:
-  IF AND !== A1 1 == 0 0
+  FOR C2 FROM 1 TO 3 BY 1
     DO
-      OUT["IF PASSED"]:
+      OUT["For loop1"]:
+      OUT["For loop2"]:
+      OUT["For loop3"]:
     ENDDO
-  OTHERWISE
+  ENDFOR
+
+  IF > C1 B1
     DO
-      OUT["IF FAILED"]:
+      OUT["C1>B1"]:
+      = C2 2:
+    ENDDO
+    OTHERWISE
+    DO
+      OUT["C1 Not > B1"]:
+      = C2 3:
     ENDDO
   ENDIF
-
-  = B1 "HELLO":
-  SWITCH B1
-    WHEN "HELLO" DO
-      OUT["SWITCH PASSED"]:
-    ENDDO
-    WHEN "HALLO" DO
-      OUT["SWITCH FAILED"]:
-    ENDDO
+  SWITCH C2
+    WHEN 3
+      DO
+        OUT["C2 ="+C2]:
+        = C3 C2:
+      ENDDO
+    WHEN 2 DO OUT["C2 ="+C2]: ENDDO
+    WHEN 1 DO OUT["C2 ="+C2]: ENDDO
   ENDSWITCH
-
-  = C1 IN["PROMPT: "]:
-  OUT["INPUT: "+C1]:
-
 ENDPROG

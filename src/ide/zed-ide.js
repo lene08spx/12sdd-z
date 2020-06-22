@@ -109,18 +109,25 @@ async function connectProcess() {
   // connect to the IDE server
   sock = new WebSocket(`ws://${location.hostname}:${location.port}/op/run?id=${hash}`);
   const output = document.getElementById("terminal-output-text");
+  let firstLine = true;
   // on program output
   sock.addEventListener("message", async e=>{
     const txt = e.data;
     // if the program has errors, it will crash and this block will run
     // the socket will also be closed by the IDE server
     if (txt.startsWith('\n\n\nFATAL')) {
-      output.innerHTML += "<br><span class='error'><br>Runtime Errors from Python<br></span><br>"
-      output.innerHTML += `<span class="error">${txt.replace('\n\n\nFATAL',"")}</span><br>`;
+      output.innerHTML += "<br><br><span class='error'>Runtime Errors Encounterd:<br>                          </span><br>"
+      output.innerHTML += `<span class="error">${htmlEntities(txt.replace('\n\n\nFATAL',""))}</span><br>`;
     }
     else
       // output to the terminal text area.
-      output.textContent += txt+"\n";
+      if (firstLine) {
+        output.textContent += txt;
+        firstLine = false;
+      }
+      else {
+        output.textContent += "\n"+txt;
+      }
   });
   // when the program is finished
   sock.addEventListener("close", e=>{
@@ -131,8 +138,10 @@ async function connectProcess() {
 
 // send input from the terminal to the currently running program
 async function sendInput() {
+  const output = document.getElementById("terminal-output-text");
   const inputEle = document.getElementById("terminal-input");
   sock.send(inputEle.value);
+  output.textContent += htmlEntities(inputEle.value);
   inputEle.value = "";
 }
 
@@ -153,8 +162,11 @@ function pickFile(){
     // this runs when the dialog opens, and a file has been chosen
     fileChooser.onchange = fce=>{
       const f = fileChooser.files[0];
+      //console.log(f.type);
       // if it fails, get the user to try again
       if (!f) return alert("Please pick a file.");
+      // make sure its not an image, oops. that breaks the browser
+      if (!f.name.endsWith(".z")) return alert("Please pick a valid .z source file.");
       // read the file.
       const r = new FileReader();
       r.onload = e=>{
@@ -368,28 +380,4 @@ function updateCodePreview() {
   text = "<span>"+text.replace(/\n/g, " </span><span>")+"</span><span id='editor-end-of-tokens-error'></span>";
   // update the overlay for the user.
   sourceHighlight.innerHTML = text;
-}
-
-/** @param {HTMLBodyElement} b */
-// used to highlight inline code examples in the documentation
-function highlightCodeElementChildren(b){
-  const eles = b.getElementsByTagName("code");
-  // for each <code> element...
-  for (let e of eles) {
-    let text = e.textContent.trim();
-    // lex it
-    const toks = lex(text);
-    toks.reverse();
-    // highlight in reverse
-    // same as zed-ide.js updateCodePreview
-    for (let t of toks) {
-      text = text.slice(0,t.absolutePos)+
-        `<span class="theme-editor-${t.type}">`+
-        htmlEntities(t.value)+`</span>`+
-        text.slice(t.absolutePos+t.value.length);
-    }
-    text = "<span>"+text.replace(/\n/g, " </span><span>")+"</span>";
-    // update element
-    e.innerHTML = text;
-  }
 }
