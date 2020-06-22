@@ -565,22 +565,17 @@ export class ZedMultiwaySelection {
     t.read(syntaxTests.SWITCH);
     this.variable = t.readVariable();
     // keep looping until the ENDSWITCH keyword is met
-    while (!t.check(syntaxTests.ENDSWITCH)) {
+    while (true) {
+      // if we have a when keyword
       if (t.check(syntaxTests.WHEN)) {
+        // remove it so we have read it
         t.read(syntaxTests.WHEN);
-        // no need to skip when we are about to parse a when block
-        skipToNextWhen = false;
-      }
-      // skip and disregard input, but ensure we don't step into EOF space
-      else if (skipToNextWhen) {
-        t.advance();
-        t.assertPeek();
-      }
-      // parse the value DO ENDDO after the WHEN
-      else {
         try {
+          // create a whenValueDO block
           this.whenValueThenCode.push([
+            // read the value to switch on
             t.readValue(),
+            // read the DO BLOCK
             new ZedDoBlock(t),
           ]);
         } catch (e) {
@@ -594,7 +589,19 @@ export class ZedMultiwaySelection {
           }
         }
       }
+      else if (t.check(syntaxTests.ENDSWITCH)) {
+        break;
+      }
+      else {
+        // throw an error, expected WHEN
+        // get the toke that shouldnt be there
+        const tokenThatShouldntBeThere = t.assertPeek();
+        // effectively "read" that value, so we move onto the next token
+        t.advance();
+        this.errors.push(new ParserError(syntaxTests.WHEN, tokenThatShouldntBeThere));
+      }
     }
+    // read off the closing endswitch
     t.read(syntaxTests.ENDSWITCH);
   }
   static check(t: Token | undefined): boolean {

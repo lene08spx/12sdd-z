@@ -72,16 +72,14 @@ export class TypeCheckInstance {
   }
   /** Check the state of variables in the param list */
   checkParams(params: ZedInOutParams) {
-    for (let item of params.items) {
-      // go through each item in the prompt list
-      for (let param of params.items) {
-        // if its a variable, we're interested in it
-        if (param instanceof ZedVariable) {
-          // if the variable is not in scope
-          // then throw undefined error
-          if (!this.inScope(param.identifier))
-            this.errors.push(new ZedUndefinedError(param));
-        }
+    // go through each item in the prompt list
+    for (let param of params.items) {
+      // if its a variable, we're interested in it
+      if (param instanceof ZedVariable) {
+        // if the variable is not in scope
+        // then throw undefined error
+        if (!this.inScope(param.identifier))
+          this.errors.push(new ZedUndefinedError(param));
       }
     }
   }

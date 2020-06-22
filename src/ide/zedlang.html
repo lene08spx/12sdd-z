@@ -407,6 +407,7 @@ ENDPROG
   </p>
 <pre><code>
 PROG if_selection
+  = N1 IN["Enter a number between 1 and 10: "]:
   IF && &gt;= N1 1 &lt;= N1 10
     DO
       OUT[N1+" is a good choice!"]:
