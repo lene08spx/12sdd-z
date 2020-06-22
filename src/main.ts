@@ -135,4 +135,15 @@ export class IDE {
 }
 
 // Start the IDE
+console.log("+==============================+")
+console.log("|                              |");
+console.log("| The Zed Programming Language |");
+console.log("|                              |");
+console.log("|    SDD Major Project 2020    |");
+console.log("|        Oliver Lenehan        |");
+console.log("|                              |");
+console.log("+==============================+");
+console.log("|     Close this window to     |");
+console.log("|       exit the program.      |");
+console.log("+------------------------------+");
 new IDE().run();
